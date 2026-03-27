@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.KhaliniMaltaApp" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowSplashScreenBackground">@android:color/black</item>
+
+        <item name="android:windowSplashScreenAnimatedIcon">@android:color/transparent</item>
+
+        <item name="android:windowBackground">@drawable/fundo_splash</item>
+
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
+</resources>
