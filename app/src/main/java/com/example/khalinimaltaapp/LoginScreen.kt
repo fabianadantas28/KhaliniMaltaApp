@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun LoginScreen(onIrParaCadastro: () -> Unit) {
     // Definição da cor dourada padrão da marca
-    val dourado = Color(0xFFC9A050)
+    val dourado = Color(0xFFC79E5E)
 
     // Estados para os campos de texto
     var usuario by remember { mutableStateOf("") }

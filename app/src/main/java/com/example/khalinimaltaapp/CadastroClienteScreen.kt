@@ -26,10 +26,10 @@ fun CadastroClienteScreen(onContinuar: () -> Unit) {
     var complemento by remember { mutableStateOf("") }
     var concordoLGPD by remember { mutableStateOf(false) }
 
-    val corDourada = Color(0xFFFFD700)
+    val corDourada = Color(0xFFC79E5E)
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // FUNDO PRETO CORRETO (Sem a borda amarela fixa)
+        // FUNDO PRETO (Sem a borda amarela fixa)
         Image(
             painter = painterResource(id = R.drawable.fundo_preto),
             contentDescription = null,
@@ -96,12 +96,19 @@ fun CadastroClienteScreen(onContinuar: () -> Unit) {
                     .fillMaxWidth(0.85f)
                     .height(46.dp)
                     .offset(y = (-45).dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD4AF37)),
+                // Trocamos para o Amarelo Bronzeado oficial da Khalini Malta
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFC79E5E)
+                ),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Text("CONTINUAR PARA SENHA", color = Color.Black, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp)
+                Text(
+                    text = "CONTINUAR PARA SENHA",
+                    color = Color.Black,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 13.sp
+                )
             }
-
             Spacer(modifier = Modifier.height(15.dp))
         }
     }

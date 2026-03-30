@@ -1,6 +1,7 @@
 package com.example.khalinimaltaapp.model
 
 data class Produto(
+    val id: String = java.util.UUID.randomUUID().toString(), // O "placa" do produto no sistema
     val nomeProduto: String = "",
     val marca: String = "",
     val material: String = "",
