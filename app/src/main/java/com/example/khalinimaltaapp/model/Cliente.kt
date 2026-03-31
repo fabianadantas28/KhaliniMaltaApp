@@ -10,5 +10,5 @@ data class Cliente(
     val email: String = "",
     val complemento: String = "",
     val consentimentoLGPD: Boolean = false, // false significa que começa desmarcado
-    val dataConsentimento: String = "" // É bom guardar QUANDO ele aceitou, como no desenho!
+    val dataConsentimento: String = "" // É bom guardar QUANDO o cliente aceitou, como no desenho!
 )
