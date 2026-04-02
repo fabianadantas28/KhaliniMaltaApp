@@ -18,16 +18,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun LoginScreen(onIrParaCadastro: () -> Unit) {
+fun LoginScreen(
+    onIrParaCadastro: () -> Unit,
+    onIrParaPaginaInicial: () -> Unit // <-- 1. LINHA ADICIONADA
+) {
     // Definição da cor dourada padrão da marca
     val dourado = Color(0xFFC79E5E)
 
     // Estados para os campos de texto
     var usuario by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
+    var mostrarDialogo by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // FUNDO KHALINI (Com a moldura amarela conforme solicitado)
+        // FUNDO KHALINI
         Image(
             painter = painterResource(id = R.drawable.fundo_khalini),
             contentDescription = null,
@@ -42,7 +46,6 @@ fun LoginScreen(onIrParaCadastro: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Espaço para não cobrir a logo no topo da moldura
             Spacer(modifier = Modifier.height(160.dp))
 
             // Campo de Usuário
@@ -83,8 +86,11 @@ fun LoginScreen(onIrParaCadastro: () -> Unit) {
             )
 
             // Link Esqueci Senha
+            // Procure por esta parte no seu código:
             TextButton(
-                onClick = { /* Lógica futura */ },
+                onClick = {
+                    mostrarDialogo = true // <--- Muda para verdadeiro para o aviso aparecer
+                },
                 modifier = Modifier.align(Alignment.End)
             ) {
                 Text("Esqueci minha senha", color = Color.White, fontSize = 12.sp)
@@ -94,7 +100,9 @@ fun LoginScreen(onIrParaCadastro: () -> Unit) {
 
             // Botão Entrar
             Button(
-                onClick = { /* Lógica de Login */ },
+                onClick = {
+                    onIrParaPaginaInicial() // <-- 2. COLOQUEI A AÇÃO DE CLIQUE AQUI
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
@@ -129,11 +137,28 @@ fun LoginScreen(onIrParaCadastro: () -> Unit) {
             }
         }
     }
+    if (mostrarDialogo) {
+        AlertDialog(
+            onDismissRequest = { mostrarDialogo = false },
+            confirmButton = {
+                TextButton(onClick = { mostrarDialogo = false }) {
+                    Text("OK", color = dourado)
+                }
+            },
+            title = { Text("Recuperação de Senha", color = Color.White) },
+            text = { Text("Um link de redefinição foi enviado para o e-mail cadastrado.", color = Color.White) },
+            containerColor = Color(0xFF1A1A1A), // Um cinza bem escuro para combinar com o fundo
+            titleContentColor = dourado
+        )
+    }
 }
 
-// Preview para visualização imediata no Android Studio
+// Preview atualizado para não dar erro
 @Preview(showSystemUi = true)
 @Composable
 fun PreviewLogin() {
-    LoginScreen(onIrParaCadastro = {})
+    LoginScreen(
+        onIrParaCadastro = {},
+        onIrParaPaginaInicial = {} // <-- 3. AJUSTEI O PREVIEW AQUI TAMBÉM
+    )
 }

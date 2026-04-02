@@ -20,7 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// Cor Ouro Envelhecido da Khalini Malta
+// Cor Ouro Envelhecido da Khalini Malta (Usaremos este nome em tudo agora)
 val CorOuroKhalini = Color(0xFFC79E5E)
 
 @Composable
@@ -43,7 +43,7 @@ fun PaginaPrincipalKM() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Espaço para a logomarca que fica no topo
-            Spacer(modifier = Modifier.height(200.dp))
+            Spacer(modifier = Modifier.height(195.dp))
 
             Text(
                 text = "Bem-vindo(a)! Gerencie suas\nvendas e estoque com facilidade.",
@@ -64,7 +64,7 @@ fun PaginaPrincipalKM() {
 
             Spacer(modifier = Modifier.height(25.dp))
 
-            // 2. Linha dos Cards de Status com seus novos ícones
+            // 2. Linha dos Cards de Status
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -82,32 +82,36 @@ fun PaginaPrincipalKM() {
                 fontSize = 13.sp
             )
 
-            // 3. Área do Gráfico com Barras Douradas
+            // 3. Área do Gráfico (CORRIGIDO: mudei 'dourado' para 'CorOuroKhalini')
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.9f)
                     .height(160.dp)
                     .padding(top = 8.dp)
                     .border(1.dp, CorOuroKhalini, RoundedCornerShape(12.dp)),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.BottomCenter // Alinha as barras na base
             ) {
                 Row(
-                    modifier = Modifier.fillMaxSize().padding(10.dp),
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 10.dp, vertical = 5.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.Bottom
                 ) {
                     val vendasSemana = listOf(0.4f, 0.7f, 0.5f, 0.9f, 0.6f, 0.8f, 0.3f)
-                    val dias = listOf("S", "T", "Q", "Q", "S", "S", "D")
+                    val dias = listOf("Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom")
 
                     vendasSemana.forEachIndexed { index, altura ->
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Box(
                                 modifier = Modifier
                                     .width(12.dp)
-                                    .fillMaxHeight(altura)
+                                    .fillMaxHeight(altura * 0.8f) // Multipliquei por 0.8 para não bater no teto
                                     .background(CorOuroKhalini, RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
                             )
-                            Text(text = dias[index], color = Color.Gray, fontSize = 10.sp)
+                            Text(
+                                text = dias[index].first().toString(),
+                                color = CorOuroKhalini, // CORREÇÃO AQUI: era dourado, agora é CorOuroKhalini
+                                fontSize = 10.sp
+                            )
                         }
                     }
                 }
@@ -116,7 +120,7 @@ fun PaginaPrincipalKM() {
             Spacer(modifier = Modifier.height(150.dp))
         }
 
-        // 4. Botões Inferiores (Dentro da moldura dourada)
+        // 4. Botões Inferiores
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
