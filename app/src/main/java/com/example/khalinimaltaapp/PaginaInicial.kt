@@ -39,10 +39,10 @@ fun PaginaPrincipalKM() {
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 35.dp), // Margem lateral para os elementos não encostarem na moldura
+                .padding(horizontal = 35.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Espaço para descer o texto para baixo da logomarca (conforme sua seta)
+            // Espaço para a logomarca que fica no topo
             Spacer(modifier = Modifier.height(200.dp))
 
             Text(
@@ -62,20 +62,18 @@ fun PaginaPrincipalKM() {
                 fontWeight = FontWeight.Bold
             )
 
-            // Espaço para os cards subirem e ficarem mais próximos do título
             Spacer(modifier = Modifier.height(25.dp))
 
-            // 2. Linha dos Cards de Status (Vendas, Alertas, Clientes)
+            // 2. Linha dos Cards de Status com seus novos ícones
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween // Distribui dentro da moldura
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 CardStatus(titulo = "Vendas Mês", valor = "$")
                 CardStatus(titulo = "Alertas", iconRes = R.drawable.outline_check_alert_24)
                 CardStatus(titulo = "Novos Clientes", iconRes = R.drawable.outline_demography_24)
             }
 
-            // 3. Ajuste da Área do Gráfico
             Spacer(modifier = Modifier.height(40.dp))
 
             Text(
@@ -84,26 +82,45 @@ fun PaginaPrincipalKM() {
                 fontSize = 13.sp
             )
 
+            // 3. Área do Gráfico com Barras Douradas
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(0.9f) // Reduz a largura para caber na moldura amarela
-                    .height(160.dp)     // Redimensiona a altura conforme sua marcação
+                    .fillMaxWidth(0.9f)
+                    .height(160.dp)
                     .padding(top = 8.dp)
                     .border(1.dp, CorOuroKhalini, RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = "Área do Gráfico", color = CorOuroKhalini.copy(alpha = 0.6f))
+                Row(
+                    modifier = Modifier.fillMaxSize().padding(10.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    val vendasSemana = listOf(0.4f, 0.7f, 0.5f, 0.9f, 0.6f, 0.8f, 0.3f)
+                    val dias = listOf("S", "T", "Q", "Q", "S", "S", "D")
+
+                    vendasSemana.forEachIndexed { index, altura ->
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Box(
+                                modifier = Modifier
+                                    .width(12.dp)
+                                    .fillMaxHeight(altura)
+                                    .background(CorOuroKhalini, RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                            )
+                            Text(text = dias[index], color = Color.Gray, fontSize = 10.sp)
+                        }
+                    }
+                }
             }
 
-            // Espaço para garantir que o scroll permita ver tudo sem bater nos botões
             Spacer(modifier = Modifier.height(150.dp))
         }
 
-        // 4. Botões Inferiores (Subindo para dentro da moldura)
+        // 4. Botões Inferiores (Dentro da moldura dourada)
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 100.dp) // Sobe os botões para longe da borda decorativa
+                .padding(bottom = 100.dp)
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
@@ -120,7 +137,7 @@ fun CardStatus(titulo: String, valor: String? = null, iconRes: Int? = null) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(text = titulo, color = CorOuroKhalini, fontSize = 10.sp, modifier = Modifier.padding(bottom = 4.dp))
         Surface(
-            modifier = Modifier.size(75.dp), // Tamanho ajustado para caber 3 na linha
+            modifier = Modifier.size(75.dp),
             shape = RoundedCornerShape(10.dp),
             color = CorOuroKhalini
         ) {
