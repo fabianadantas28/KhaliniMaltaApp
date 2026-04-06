@@ -50,7 +50,7 @@ fun PaginaCategorias(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // DESCER O NOME CATEGORIAS
-            Spacer(modifier = Modifier.height(255.dp))
+            Spacer(modifier = Modifier.height(250.dp))
 
             Text(
                 text = "CATEGORIAS",
