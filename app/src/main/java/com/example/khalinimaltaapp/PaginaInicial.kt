@@ -20,7 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// Cor Ouro Envelhecido da Khalini Malta (Usaremos este nome em tudo agora)
+// Cor Ouro envelhecido da Khalini Malta (Usaremos este nome em tudo agora)
 val CorOuroKhalini = Color(0xFFC79E5E)
 
 @Composable
