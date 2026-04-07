@@ -88,7 +88,7 @@ fun PaginaCategorias(navController: NavController) {
             }
 
             // Margem inferior para o botão ficar na posição correta
-            Spacer(modifier = Modifier.height(105.dp))
+            Spacer(modifier = Modifier.height(135.dp))
         }
     }
 }

@@ -43,7 +43,7 @@ fun PaginaPrincipalKM() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Espaço para a logomarca que fica no topo
-            Spacer(modifier = Modifier.height(195.dp))
+            Spacer(modifier = Modifier.height(199.dp))
 
             Text(
                 text = "Bem-vindo(a)! Gerencie suas\nvendas e estoque com facilidade.",
