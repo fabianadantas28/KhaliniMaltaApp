@@ -8,6 +8,8 @@ import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState // ADICIONADO
+import androidx.compose.runtime.getValue       // ADICIONADO
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -18,24 +20,26 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel // ADICIONADO
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.khalinimaltaapp.viewmodel.CategoriaViewModel // ADICIONADO
 
-// TOM DE OURO DA FIGURA ENVIADA (Dourado Terroso)
+// SEU DESIGN ORIGINAL (MANTIDO)
 val CorOuroCaixinha = Color(0xFFC39953)
 val CorOuroBorda = Color(0xFFC79E5E)
 
-data class CategoriaItem(
-    val nome: String,
-    val imagemRes: Int,
-    val rota: String
-)
-
 @Composable
-fun PaginaCategorias(navController: NavController) {
+fun PaginaCategorias(
+    navController: NavController,
+    viewModel: CategoriaViewModel = viewModel() // 1. CONECTADO O VIEWMODEL
+) {
+    // 2. PEGANDO A LISTA DO VIEWMODEL
+    val categorias by viewModel.categorias.collectAsState()
+
     Box(modifier = Modifier.fillMaxSize()) {
 
-        // FUNDO
+        // SEU FUNDO ORIGINAL
         Image(
             painter = painterResource(id = R.drawable.fundo_khalini),
             contentDescription = null,
@@ -49,7 +53,6 @@ fun PaginaCategorias(navController: NavController) {
                 .padding(horizontal = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // DESCER O NOME CATEGORIAS
             Spacer(modifier = Modifier.height(250.dp))
 
             Text(
@@ -62,12 +65,21 @@ fun PaginaCategorias(navController: NavController) {
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // GRID
+            // GRID USANDO A LISTA DO VIEWMODEL
             Box(modifier = Modifier.weight(1f)) {
-                CategoriaGrid(navController)
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    // 3. AGORA USA OS ITENS QUE VEM DO VIEWMODEL
+                    items(categorias) { categoria ->
+                        CategoriaCard(categoria, navController)
+                    }
+                }
             }
 
-            // SUBIR O BOTÃO VOLTAR
             OutlinedButton(
                 onClick = { navController.popBackStack() },
                 modifier = Modifier
@@ -87,41 +99,17 @@ fun PaginaCategorias(navController: NavController) {
                 )
             }
 
-            // Margem inferior para o botão ficar na posição correta
             Spacer(modifier = Modifier.height(135.dp))
         }
     }
 }
 
 @Composable
-fun CategoriaGrid(navController: NavController) {
-    val categorias = listOf(
-        CategoriaItem("Anéis", R.drawable.anel, "aneis"),
-        CategoriaItem("Colares", R.drawable.colar, "colares"),
-        CategoriaItem("Brincos", R.drawable.brinco, "brincos"),
-        CategoriaItem("Pulseiras", R.drawable.pulseira, "pulseiras"),
-        CategoriaItem("Tornozeleiras", R.drawable.tornozeleira, "tornozeleiras"),
-        CategoriaItem("Acessórios", R.drawable.acessorios, "acessorios")
-    )
-
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        items(categorias) { categoria ->
-            CategoriaCard(categoria, navController)
-        }
-    }
-}
-
-@Composable
-fun CategoriaCard(item: CategoriaItem, navController: NavController) {
+fun CategoriaCard(item: com.example.khalinimaltaapp.viewmodel.CategoriaItem, navController: NavController) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(1.3f) // Caixas menores e mais baixas
+            .aspectRatio(1.3f)
             .clickable { navController.navigate(item.rota) },
         shape = RoundedCornerShape(10.dp),
         border = androidx.compose.foundation.BorderStroke(0.5.dp, CorOuroBorda)
@@ -129,7 +117,7 @@ fun CategoriaCard(item: CategoriaItem, navController: NavController) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(CorOuroCaixinha), // COR EXATA DA SUA IMAGEM
+                .background(CorOuroCaixinha),
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -137,7 +125,7 @@ fun CategoriaCard(item: CategoriaItem, navController: NavController) {
                     painter = painterResource(id = item.imagemRes),
                     contentDescription = item.nome,
                     modifier = Modifier.size(38.dp),
-                    colorFilter = ColorFilter.tint(Color.Black) // Ícones em preto para contraste
+                    colorFilter = ColorFilter.tint(Color.Black)
                 )
 
                 Spacer(modifier = Modifier.height(2.dp))
