@@ -16,27 +16,21 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 
-// COR PADRÃO KHALINI MALTA
-val CorOuroKhaliniMenu = Color(0xFFC79E5E)
-
-// MODELO DO ITEM
-data class MenuItem(
+// 1. DEFINIÇÃO DO MODELO (Tem que estar aqui para não dar erro de referência)
+data class MenuItemData(
     val titulo: String,
     val icone: ImageVector,
     val rota: String
 )
 
-@Composable
-fun PaginaMenu(navController: NavController) {
-    Box(modifier = Modifier.fillMaxSize()) {
+val CorOuroMenuFixo = Color(0xFFC79E5E)
 
-        // FUNDO KHALINI
+@Composable
+fun MenuScreen(onVoltar: () -> Unit) {
+    Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(id = R.drawable.fundo_khalini),
             contentDescription = null,
@@ -47,67 +41,51 @@ fun PaginaMenu(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 40.dp), // Aperta mais os lados para os botões encolherem
+                .padding(horizontal = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 1. ESPAÇO PARA A LOGOMARCA
-            // Aumentamos para 200dp para o texto "Menu Principal" brotar LOGO ABAIXO do círculo central
             Spacer(modifier = Modifier.height(210.dp))
 
             Text(
                 text = "MENU PRINCIPAL",
-                color = CorOuroKhaliniMenu,
-                fontSize = 20.sp, // Diminuí um pouco a fonte para ficar mais elegante
+                color = CorOuroMenuFixo,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 2.sp
             )
 
             Spacer(modifier = Modifier.height(25.dp))
 
-            // 2. GRID DE OPÇÕES (Botões menores)
-            // Aumentei o padding horizontal aqui para os botões ficarem mais estreitos e delicados
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 20.dp)
-            ) {
-                MenuGrid(navController)
+            // GRID DE OPÇÕES
+            Box(modifier = Modifier.weight(1f)) {
+                MenuGrid()
             }
 
-            // 3. BOTÃO VOLTAR (Subindo para dentro do quadrado)
+            // BOTÃO VOLTAR
             OutlinedButton(
-                onClick = { navController.popBackStack() },
+                onClick = onVoltar,
                 modifier = Modifier
-                    .fillMaxWidth(0.8f) // Botão mais curto
+                    .fillMaxWidth(0.8f)
                     .height(45.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, CorOuroKhaliniMenu),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = Color.Black.copy(alpha = 0.8f)
-                )
+                border = androidx.compose.foundation.BorderStroke(1.dp, CorOuroMenuFixo),
+                shape = RoundedCornerShape(12.dp)
             ) {
-                Text(
-                    text = "VOLTAR AO INÍCIO",
-                    color = CorOuroKhaliniMenu,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp
-                )
+                Text("VOLTAR AO INÍCIO", color = CorOuroMenuFixo, fontWeight = FontWeight.Bold)
             }
 
-            // 4. MARGEM DE SEGURANÇA INFERIOR
-            // Aumentei para 110dp para garantir que o botão suba e saia da borda dourada de baixo
             Spacer(modifier = Modifier.height(110.dp))
         }
     }
 }
+
 @Composable
-fun MenuGrid(navController: NavController) {
+fun MenuGrid() {
     val itens = listOf(
-        MenuItem("Clientes", Icons.Default.Person, "clientes"),
-        MenuItem("Produtos", Icons.Default.ShoppingCart, "produtos"),
-        MenuItem("Vendas", Icons.Default.ThumbUp, "vendas"),
-        MenuItem("Relatórios", Icons.Default.Info, "relatorios"),
-        MenuItem("Estoque", Icons.Default.Build, "estoque")
+        MenuItemData("Clientes", Icons.Default.Person, "clientes"),
+        MenuItemData("Produtos", Icons.Default.ShoppingCart, "produtos"),
+        MenuItemData("Vendas", Icons.Default.ThumbUp, "vendas"),
+        MenuItemData("Relatórios", Icons.Default.Info, "relatorios"),
+        MenuItemData("Estoque", Icons.Default.Build, "estoque")
     )
 
     LazyVerticalGrid(
@@ -117,20 +95,20 @@ fun MenuGrid(navController: NavController) {
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(itens) { item ->
-            MenuCard(item, navController)
+            MenuCard(item)
         }
     }
 }
 
 @Composable
-fun MenuCard(item: MenuItem, navController: NavController) {
+fun MenuCard(item: MenuItemData) {
     Card(
         modifier = Modifier
             .aspectRatio(1f)
-            .clickable { navController.navigate(item.rota) },
+            .clickable { /* Ação futura */ },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.7f)),
-        border = androidx.compose.foundation.BorderStroke(1.dp, CorOuroKhaliniMenu)
+        border = androidx.compose.foundation.BorderStroke(1.dp, CorOuroMenuFixo)
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -140,24 +118,11 @@ fun MenuCard(item: MenuItem, navController: NavController) {
             Icon(
                 imageVector = item.icone,
                 contentDescription = null,
-                tint = CorOuroKhaliniMenu,
+                tint = CorOuroMenuFixo,
                 modifier = Modifier.size(40.dp)
             )
             Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = item.titulo,
-                color = CorOuroKhaliniMenu,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium
-            )
+            Text(text = item.titulo, color = CorOuroMenuFixo, fontSize = 14.sp)
         }
     }
-}
-
-// PREVIEW COMPLETO
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun PreviewPaginaMenu() {
-    val navController = rememberNavController()
-    PaginaMenu(navController = navController)
 }

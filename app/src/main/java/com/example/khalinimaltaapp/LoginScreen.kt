@@ -16,19 +16,16 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.khalinimaltaapp.viewmodel.LoginViewModel
 
 @Composable
 fun LoginScreen(
     onIrParaCadastro: () -> Unit,
-    onIrParaPaginaInicial: () -> Unit // <-- 1. LINHA ADICIONADA
+    onIrParaPaginaInicial: () -> Unit,
+    // Conexão com a ViewModel
+    viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
-    // Definição da cor dourada padrão da marca
     val dourado = Color(0xFFC79E5E)
-
-    // Estados para os campos de texto
-    var usuario by remember { mutableStateOf("") }
-    var senha by remember { mutableStateOf("") }
-    var mostrarDialogo by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         // FUNDO KHALINI
@@ -48,10 +45,10 @@ fun LoginScreen(
         ) {
             Spacer(modifier = Modifier.height(160.dp))
 
-            // Campo de Usuário
+            // Campo de Usuário - Conectado à ViewModel
             OutlinedTextField(
-                value = usuario,
-                onValueChange = { usuario = it },
+                value = viewModel.usuario,
+                onValueChange = { viewModel.usuario = it },
                 label = { Text("Usuário", color = dourado) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -67,10 +64,10 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campo de Senha
+            // Campo de Senha - Conectado à ViewModel
             OutlinedTextField(
-                value = senha,
-                onValueChange = { senha = it },
+                value = viewModel.senha,
+                onValueChange = { viewModel.senha = it },
                 label = { Text("Senha", color = dourado) },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
@@ -85,12 +82,9 @@ fun LoginScreen(
                 shape = RoundedCornerShape(12.dp)
             )
 
-            // Link Esqueci Senha
-            // Procure por esta parte no seu código:
+            // Link Esqueci Senha - Usando estado da ViewModel
             TextButton(
-                onClick = {
-                    mostrarDialogo = true // <--- Muda para verdadeiro para o aviso aparecer
-                },
+                onClick = { viewModel.mostrarDialogo = true },
                 modifier = Modifier.align(Alignment.End)
             ) {
                 Text("Esqueci minha senha", color = Color.White, fontSize = 12.sp)
@@ -100,9 +94,7 @@ fun LoginScreen(
 
             // Botão Entrar
             Button(
-                onClick = {
-                    onIrParaPaginaInicial() // <-- 2. COLOQUEI A AÇÃO DE CLIQUE AQUI
-                },
+                onClick = onIrParaPaginaInicial,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
@@ -137,28 +129,29 @@ fun LoginScreen(
             }
         }
     }
-    if (mostrarDialogo) {
+
+    // Diálogo controlado pela ViewModel
+    if (viewModel.mostrarDialogo) {
         AlertDialog(
-            onDismissRequest = { mostrarDialogo = false },
+            onDismissRequest = { viewModel.mostrarDialogo = false },
             confirmButton = {
-                TextButton(onClick = { mostrarDialogo = false }) {
+                TextButton(onClick = { viewModel.mostrarDialogo = false }) {
                     Text("OK", color = dourado)
                 }
             },
             title = { Text("Recuperação de Senha", color = Color.White) },
             text = { Text("Um link de redefinição foi enviado para o e-mail cadastrado.", color = Color.White) },
-            containerColor = Color(0xFF1A1A1A), // Um cinza bem escuro para combinar com o fundo
+            containerColor = Color(0xFF1A1A1A),
             titleContentColor = dourado
         )
     }
 }
 
-// Preview atualizado para não dar erro
 @Preview(showSystemUi = true)
 @Composable
 fun PreviewLogin() {
     LoginScreen(
         onIrParaCadastro = {},
-        onIrParaPaginaInicial = {} // <-- 3. AJUSTEI O PREVIEW AQUI TAMBÉM
+        onIrParaPaginaInicial = {}
     )
 }

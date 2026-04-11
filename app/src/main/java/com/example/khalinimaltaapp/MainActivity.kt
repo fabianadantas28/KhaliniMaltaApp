@@ -3,10 +3,12 @@ package com.example.khalinimaltaapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.khalinimaltaapp.ui.theme.KhaliniMaltaAppTheme
+import com.example.khalinimaltaapp.viewmodel.CriarSenhaViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -14,54 +16,37 @@ class MainActivity : ComponentActivity() {
         setContent {
             KhaliniMaltaAppTheme {
                 val navController = rememberNavController()
+                val sharedViewModel: CriarSenhaViewModel = viewModel()
 
-                // O NavHost controla quem aparece na tela
-                NavHost(navController = navController, startDestination = "splash") {
+                NavHost(navController = navController, startDestination = "login") {
 
-                    // 1. Tela de Abertura (Splash)
-                    composable("splash") {
-                        SplashScreen(onTimeout = {
-                            navController.navigate("login") {
-                                popUpTo("splash") { inclusive = true }
-                            }
-                        })
-                    }
-
-                    // 2. Tela de Login (Ajustada com os dois botões)
-                    composable("login") {
+                    // Rota de Login (Nomes corrigidos conforme o erro)
+                    composable(route = "login") {
                         LoginScreen(
-                            onIrParaCadastro = {
-                                navController.navigate("cadastro")
-                            },
-                            onIrParaPaginaInicial = { // <--- AQUI ESTÁ A CORREÇÃO
-                                navController.navigate("home")
-                            }
+                            onIrParaPaginaInicial = { navController.navigate("home") },
+                            onIrParaCadastro = { navController.navigate("cadastro_cliente") }
                         )
                     }
 
-                    // ... e logo abaixo deve ter isso:
-                    composable("cadastro") {
-                        CadastroClienteScreen(onContinuar = { /* ... */ })
+                    // Rota de Cadastro
+                    composable(route = "cadastro_cliente") {
+                        CadastroClienteScreen(
+                            onContinuar = { navController.navigate("criar_senha") },
+                            viewModel = sharedViewModel
+                        )
                     }
 
-                    // 3. Tela de Cadastro
-                    composable("cadastro") {
-                        CadastroClienteScreen(onContinuar = {
-                            navController.navigate("criar_senha")
-                        })
+                    // Rota de Senha
+                    composable(route = "criar_senha") {
+                        CriarSenhaScreen(
+                            onFinalizar = { navController.navigate("login") },
+                            viewModel = sharedViewModel
+                        )
                     }
 
-                    // 4. Tela de Criar Senha
-                    composable("criar_senha") {
-                        CriarSenhaScreen(onFinalizar = {
-                            navController.navigate("login")
-                        })
-                    }
-
-                    // 5. Rota para a Página Inicial (Onde tem o gráfico)
-                    composable("home") {
-                        PaginaPrincipalKM()
-                    }
+                    // Outras Rotas
+                    composable(route = "home") { PaginaPrincipalKM(onAbrirMenu = { navController.navigate("menu") }) }
+                    composable(route = "menu") { MenuScreen(onVoltar = { navController.popBackStack() }) }
                 }
             }
         }

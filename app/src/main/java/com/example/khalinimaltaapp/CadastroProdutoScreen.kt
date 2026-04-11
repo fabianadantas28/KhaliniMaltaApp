@@ -163,8 +163,8 @@ fun CadastroProdutoScreen() {
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
+@Preview(showBackground = true)
 @Composable
-fun PreviewCadastroFinalCompacto() {
+fun PreviewCadastroProduto() {
     CadastroProdutoScreen()
 }

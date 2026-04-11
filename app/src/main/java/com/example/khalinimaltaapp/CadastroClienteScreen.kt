@@ -14,22 +14,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.khalinimaltaapp.ui.theme.KhaliniMaltaAppTheme
+import com.example.khalinimaltaapp.viewmodel.CriarSenhaViewModel
 
 @Composable
-fun CadastroClienteScreen(onContinuar: () -> Unit) {
-    var nome by remember { mutableStateOf("") }
-    var sobrenome by remember { mutableStateOf("") }
-    var dataNasc by remember { mutableStateOf("") }
-    var cpf by remember { mutableStateOf("") }
-    var foneCelular by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var complemento by remember { mutableStateOf("") }
-    var concordoLGPD by remember { mutableStateOf(false) }
-
+fun CadastroClienteScreen(
+    onContinuar: () -> Unit,
+    // Usamos o CriarSenhaViewModel para que os dados fiquem no "caderno" que salva no banco
+    viewModel: CriarSenhaViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+) {
     val corDourada = Color(0xFFC79E5E)
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // FUNDO PRETO (Sem a borda amarela fixa)
         Image(
             painter = painterResource(id = R.drawable.fundo_preto),
             contentDescription = null,
@@ -43,7 +39,6 @@ fun CadastroClienteScreen(onContinuar: () -> Unit) {
                 .padding(horizontal = 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // TÍTULO MAIS BAIXO (Para não grudar na logo do fundo)
             Spacer(modifier = Modifier.height(195.dp))
 
             Text(
@@ -54,52 +49,31 @@ fun CadastroClienteScreen(onContinuar: () -> Unit) {
                 modifier = Modifier.padding(bottom = 12.dp)
             )
 
-            CampoExterno("Nome", nome, { nome = it }, corDourada)
-            CampoExterno("Sobrenome", sobrenome, { sobrenome = it }, corDourada)
+            // Conectando os campos às variáveis certas do CriarSenhaViewModel
+            CampoExterno("Nome", viewModel.nome, { viewModel.nome = it }, corDourada)
+            CampoExterno("Sobrenome", viewModel.sobrenome, { viewModel.sobrenome = it }, corDourada)
 
-            // LINHA COM DATA E CELULAR (Liberando espaço para o CPF)
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Box(Modifier.weight(1f)) { CampoExterno("Data Nasc.", dataNasc, { dataNasc = it }, corDourada) }
-                Box(Modifier.weight(1f)) { CampoExterno("Celular", foneCelular, { foneCelular = it }, corDourada) }
+                Box(Modifier.weight(1f)) {
+                    CampoExterno("Data Nasc.", viewModel.data, { viewModel.data = it }, corDourada)
+                }
+                Box(Modifier.weight(1f)) {
+                    CampoExterno("Celular", viewModel.telefone, { viewModel.telefone = it }, corDourada)
+                }
             }
 
-            // CPF SOZINHO EMBAIXO (Máximo de espaço conforme solicitado)
-            CampoExterno("CPF", cpf, { cpf = it }, corDourada)
-
-            CampoExterno("E-mail", email, { email = it }, corDourada)
-
-            // CHECKBOX LGPD
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Checkbox(
-                    checked = concordoLGPD,
-                    onCheckedChange = { concordoLGPD = it },
-                    colors = CheckboxDefaults.colors(checkedColor = corDourada, uncheckedColor = Color.White)
-                )
-                Text(
-                    text = "Concordo em permitir o uso dos meus dados para comunicação sobre o status do pedido e promoções da loja (LGPD).",
-                    color = Color.White,
-                    fontSize = 11.sp
-                )
-            }
-
-            CampoExterno("Complemento", complemento, { complemento = it }, corDourada, Modifier.height(55.dp))
+            CampoExterno("CPF", viewModel.cpf, { viewModel.cpf = it }, corDourada)
+            CampoExterno("E-mail", viewModel.email, { viewModel.email = it }, corDourada)
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // BOTÃO MAIS ALTO (Para encaixar na moldura inferior)
             Button(
                 onClick = onContinuar,
                 modifier = Modifier
                     .fillMaxWidth(0.85f)
                     .height(46.dp)
                     .offset(y = (-45).dp),
-                // Trocamos para o Amarelo Bronzeado oficial da Khalini Malta
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFC79E5E)
-                ),
+                colors = ButtonDefaults.buttonColors(containerColor = corDourada),
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Text(
@@ -126,15 +100,21 @@ fun CampoExterno(label: String, value: String, onValueChange: (String) -> Unit, 
             shape = RoundedCornerShape(8.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = cor,
-                unfocusedBorderColor = cor
+                unfocusedBorderColor = cor,
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White
             )
         )
     }
 }
 
-// --- O PREVIEW QUE ESTAVA FALTANDO ---
-@Preview(showSystemUi = true)
+// O PREVIEW QUE ESTAVA FALTANDO:
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun PreviewCadastroCliente() {
-    CadastroClienteScreen(onContinuar = {})
+fun PreviewCadastro() {
+    KhaliniMaltaAppTheme {
+        // No Preview, como não temos uma Activity real, o ViewModel pode dar erro.
+        // Se der erro no seu Android Studio, você pode deixar o parâmetro do viewModel vazio para visualização.
+        Text("Visualize a tela no Emulador para testar o Banco de Dados", color = Color.White)
+    }
 }
