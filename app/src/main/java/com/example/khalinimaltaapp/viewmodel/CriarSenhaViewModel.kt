@@ -6,10 +6,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.khalinimaltaapp.data.Cliente
 import com.example.khalinimaltaapp.data.database.AppDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.example.khalinimaltaapp.data.Cliente
 
 class CriarSenhaViewModel(application: Application) : AndroidViewModel(application) {
     private val clienteDao = AppDatabase.getDatabase(application).clienteDao()

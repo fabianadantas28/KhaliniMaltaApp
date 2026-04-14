@@ -1,15 +1,16 @@
 package com.example.khalinimaltaapp.viewmodel
 
+import com.example.khalinimaltaapp.data.Cliente
 import android.app.Application
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.khalinimaltaapp.data.Cliente
 import com.example.khalinimaltaapp.data.database.AppDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+
 
 // Mudamos para AndroidViewModel para ele conseguir acessar o Banco de Dados
 class CadastroClienteViewModel(application: Application) : AndroidViewModel(application) {

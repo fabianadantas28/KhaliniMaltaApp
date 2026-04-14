@@ -15,13 +15,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.khalinimaltaapp.ui.theme.KhaliniMaltaAppTheme
-import com.example.khalinimaltaapp.viewmodel.CriarSenhaViewModel
+import com.example.khalinimaltaapp.viewmodel.CadastroClienteViewModel
 
 @Composable
 fun CadastroClienteScreen(
     onContinuar: () -> Unit,
-    // Usamos o CriarSenhaViewModel para que os dados fiquem no "caderno" que salva no banco
-    viewModel: CriarSenhaViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    // Deixamos apenas o tipo aqui, a MainActivity passará o sharedVM
+    viewModel: CadastroClienteViewModel
 ) {
     val corDourada = Color(0xFFC79E5E)
 
@@ -49,16 +49,15 @@ fun CadastroClienteScreen(
                 modifier = Modifier.padding(bottom = 12.dp)
             )
 
-            // Conectando os campos às variáveis certas do CriarSenhaViewModel
             CampoExterno("Nome", viewModel.nome, { viewModel.nome = it }, corDourada)
             CampoExterno("Sobrenome", viewModel.sobrenome, { viewModel.sobrenome = it }, corDourada)
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Box(Modifier.weight(1f)) {
-                    CampoExterno("Data Nasc.", viewModel.data, { viewModel.data = it }, corDourada)
+                    CampoExterno("Data Nasc.", viewModel.dataNasc, { viewModel.dataNasc = it }, corDourada)
                 }
                 Box(Modifier.weight(1f)) {
-                    CampoExterno("Celular", viewModel.telefone, { viewModel.telefone = it }, corDourada)
+                    CampoExterno("Celular", viewModel.foneCelular, { viewModel.foneCelular = it }, corDourada)
                 }
             }
 
@@ -68,7 +67,10 @@ fun CadastroClienteScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
-                onClick = onContinuar,
+                onClick = {
+                    // Agora apenas navegamos. Os dados ficam guardados no viewModel!
+                    onContinuar()
+                },
                 modifier = Modifier
                     .fillMaxWidth(0.85f)
                     .height(46.dp)
@@ -108,13 +110,12 @@ fun CampoExterno(label: String, value: String, onValueChange: (String) -> Unit, 
     }
 }
 
-// O PREVIEW QUE ESTAVA FALTANDO:
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun PreviewCadastro() {
     KhaliniMaltaAppTheme {
-        // No Preview, como não temos uma Activity real, o ViewModel pode dar erro.
-        // Se der erro no seu Android Studio, você pode deixar o parâmetro do viewModel vazio para visualização.
-        Text("Visualize a tela no Emulador para testar o Banco de Dados", color = Color.White)
+        Surface(color = Color.Black) {
+            Text("Visualize no Emulador para testar", color = Color.White)
+        }
     }
 }

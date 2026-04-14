@@ -4,10 +4,10 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.example.khalinimaltaapp.data.Cliente
 import com.example.khalinimaltaapp.data.dao.ClienteDao
 import com.example.khalinimaltaapp.model.Usuario
 import com.example.khalinimaltaapp.data.dao.UsuarioDao
+import com.example.khalinimaltaapp.data.Cliente
 
 @Database(entities = [Usuario::class, Cliente::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {

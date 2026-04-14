@@ -18,4 +18,8 @@ interface UsuarioDao {
 
     @Query("SELECT * FROM usuarios")
     fun listarTodosUsuarios(): Flow<List<Usuario>>
+
+    // Adicione esta função para o Room não dar conflito de assinatura (JVM signature)
+    @Query("DELETE FROM usuarios WHERE id = :id")
+    suspend fun deletarPorId(id: String)
 }

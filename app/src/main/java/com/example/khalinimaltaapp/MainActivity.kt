@@ -8,7 +8,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.khalinimaltaapp.ui.theme.KhaliniMaltaAppTheme
-import com.example.khalinimaltaapp.viewmodel.CriarSenhaViewModel
+import com.example.khalinimaltaapp.viewmodel.CadastroClienteViewModel
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -16,11 +17,14 @@ class MainActivity : ComponentActivity() {
         setContent {
             KhaliniMaltaAppTheme {
                 val navController = rememberNavController()
-                val sharedViewModel: CriarSenhaViewModel = viewModel()
+
+                // Criamos o ViewModel UM ÚNICA VEZ aqui fora para ser compartilhado
+                // Ele agora guarda tanto os dados do cliente quanto a senha
+                val sharedViewModel: CadastroClienteViewModel = viewModel()
 
                 NavHost(navController = navController, startDestination = "login") {
 
-                    // Rota de Login (Nomes corrigidos conforme o erro)
+                    // 1. Rota de Login
                     composable(route = "login") {
                         LoginScreen(
                             onIrParaPaginaInicial = { navController.navigate("home") },
@@ -28,25 +32,35 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    // Rota de Cadastro
+                    // 2. Rota de Cadastro
                     composable(route = "cadastro_cliente") {
                         CadastroClienteScreen(
                             onContinuar = { navController.navigate("criar_senha") },
-                            viewModel = sharedViewModel
+                            viewModel = sharedViewModel // Usa o motor compartilhado
                         )
                     }
 
-                    // Rota de Senha
+                    // 3. Rota de Senha
                     composable(route = "criar_senha") {
                         CriarSenhaScreen(
-                            onFinalizar = { navController.navigate("login") },
-                            viewModel = sharedViewModel
+                            onFinalizar = {
+                                // Navega de volta para o login e limpa o histórico
+                                navController.navigate("login") {
+                                    popUpTo("login") { inclusive = true }
+                                }
+                            },
+                            viewModel = sharedViewModel // Usa o MESMO motor da tela anterior
                         )
                     }
 
-                    // Outras Rotas
-                    composable(route = "home") { PaginaPrincipalKM(onAbrirMenu = { navController.navigate("menu") }) }
-                    composable(route = "menu") { MenuScreen(onVoltar = { navController.popBackStack() }) }
+                    // 4. Outras Rotas
+                    composable(route = "home") {
+                        PaginaPrincipalKM(onAbrirMenu = { navController.navigate("menu") })
+                    }
+
+                    composable(route = "menu") {
+                        MenuScreen(onVoltar = { navController.popBackStack() })
+                    }
                 }
             }
         }

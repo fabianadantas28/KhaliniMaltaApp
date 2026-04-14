@@ -19,20 +19,21 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.khalinimaltaapp.viewmodel.CriarSenhaViewModel
+// IMPORTANTE: Importando o ViewModel que agora faz tudo
+import com.example.khalinimaltaapp.viewmodel.CadastroClienteViewModel
 import com.example.khalinimaltaapp.ui.theme.KhaliniMaltaAppTheme
 
 @Composable
 fun CriarSenhaScreen(
     onFinalizar: () -> Unit,
-    viewModel: CriarSenhaViewModel // O ViewModel que vem da MainActivity
+    viewModel: CadastroClienteViewModel // Agora usando o motor compartilhado!
 ) {
     val dourado = Color(0xFFD4AF37)
     val scrollState = rememberScrollState()
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
-            painter = painterResource(id = R.drawable.fundo_preto), // Ajuste para seu nome de imagem
+            painter = painterResource(id = R.drawable.fundo_preto),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.FillBounds
@@ -54,7 +55,6 @@ fun CriarSenhaScreen(
                 modifier = Modifier.padding(bottom = 40.dp)
             )
 
-            // Agora o CustomTextField está definido logo abaixo, o erro vai sumir
             CustomTextField(
                 valor = viewModel.senha,
                 aoMudar = { viewModel.senha = it },
@@ -77,6 +77,7 @@ fun CriarSenhaScreen(
 
             Button(
                 onClick = {
+                    // Aqui acontece a mágica: ele salva NOME (da tela 1) + SENHA (da tela 2)
                     viewModel.salvarNoBanco()
                     onFinalizar()
                 },
@@ -99,7 +100,6 @@ fun CriarSenhaScreen(
     }
 }
 
-// ESSA FUNÇÃO ESTAVA FALTANDO NO SEU ARQUIVO:
 @Composable
 fun CustomTextField(
     valor: String,
