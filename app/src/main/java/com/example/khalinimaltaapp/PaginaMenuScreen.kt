@@ -36,7 +36,7 @@ fun MenuScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         // Imagem de Fundo
         Image(
-            painter = painterResource(id = R.drawable.fundo_khalini),
+            painter = painterResource(id = R.drawable.fundo_logomarca),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.FillBounds
@@ -49,7 +49,7 @@ fun MenuScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Espaçamento para a logo que está na imagem de fundo
-            Spacer(modifier = Modifier.height(210.dp))
+            Spacer(modifier = Modifier.height(130.dp))
 
             Text(
                 text = "MENU PRINCIPAL",
@@ -79,7 +79,7 @@ fun MenuScreen(
             }
 
             // Espaçamento final para o rodapé da imagem
-            Spacer(modifier = Modifier.height(110.dp))
+            Spacer(modifier = Modifier.height(90.dp))
         }
     }
 }

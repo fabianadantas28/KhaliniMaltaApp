@@ -39,7 +39,7 @@ fun PaginaCategorias(
 
         // FUNDO
         Image(
-            painter = painterResource(id = R.drawable.fundo_khalini),
+            painter = painterResource(id = R.drawable.fundo_logomarca),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.FillBounds
@@ -51,7 +51,7 @@ fun PaginaCategorias(
                 .padding(horizontal = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(230.dp))
+            Spacer(modifier = Modifier.height(150.dp))
 
             Text(
                 text = "CATEGORIAS",

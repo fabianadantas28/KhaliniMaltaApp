@@ -30,7 +30,7 @@ fun PaginaPrincipalKM(
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
-            painter = painterResource(id = R.drawable.fundo_khalini),
+            painter = painterResource(id = R.drawable.fundo_logomarca),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.FillBounds
@@ -43,7 +43,7 @@ fun PaginaPrincipalKM(
                 .padding(horizontal = 35.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(199.dp))
+            Spacer(modifier = Modifier.height(150.dp))
 
             Text(
                 text = "Bem-vindo(a)! Gerencie suas\nvendas e estoque com facilidade.",
