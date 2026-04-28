@@ -5,15 +5,23 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.khalinimaltaapp.data.dao.ClienteDao
-import com.example.khalinimaltaapp.model.Usuario
+import com.example.khalinimaltaapp.data.Usuario
 import com.example.khalinimaltaapp.data.dao.UsuarioDao
 import com.example.khalinimaltaapp.data.Cliente
+import com.example.khalinimaltaapp.data.Produto // Garanta que este import existe
+import com.example.khalinimaltaapp.data.dao.ProdutoDao
 
-@Database(entities = [Usuario::class, Cliente::class], version = 1, exportSchema = false)
+// ADICIONEI O Produto::class AQUI ABAIXO:
+@Database(
+    entities = [Usuario::class, Cliente::class, Produto::class],
+    version = 2,
+    exportSchema = false
+)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun usuarioDao(): UsuarioDao
     abstract fun clienteDao(): ClienteDao
+    abstract fun produtoDao(): ProdutoDao
 
     companion object {
         @Volatile
@@ -26,7 +34,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "khalini_database"
                 )
-                    .fallbackToDestructiveMigration() // ESTA LINHA SALVA VIDAS!
+                    .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
                 instance

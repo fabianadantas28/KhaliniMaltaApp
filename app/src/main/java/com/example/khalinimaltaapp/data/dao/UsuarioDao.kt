@@ -4,14 +4,15 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.example.khalinimaltaapp.model.Usuario
+import com.example.khalinimaltaapp.data.Usuario
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface UsuarioDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun cadastrarUsuario(usuario: Usuario)
+    suspend fun cadastrarUsuario(usuario: Usuario): Unit // Adicione : Unit
+
 
     @Query("SELECT * FROM usuarios WHERE email = :email AND senha = :senha LIMIT 1")
     suspend fun realizarLogin(email: String, senha: String): Usuario?
@@ -19,7 +20,8 @@ interface UsuarioDao {
     @Query("SELECT * FROM usuarios")
     fun listarTodosUsuarios(): Flow<List<Usuario>>
 
-    // Adicione esta função para o Room não dar conflito de assinatura (JVM signature)
+    // Altere de String para Int
     @Query("DELETE FROM usuarios WHERE id = :id")
-    suspend fun deletarPorId(id: String)
+    suspend fun deletarPorId(id: Int): Unit // Adicione : Unit
+
 }

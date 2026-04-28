@@ -1,5 +1,7 @@
 package com.example.khalinimaltaapp
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -13,16 +15,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.example.khalinimaltaapp.data.Produto
+import com.example.khalinimaltaapp.data.dao.ProdutoDao
+import kotlinx.coroutines.launch
 
-// Cor Ouro da Khalini Malta
+// 1. DEFINIÇÃO DA COR
 val CorOuroEnvelhecido = Color(0xFFC79E5E)
 
+// 2. FUNÇÃO AUXILIAR DO CAMPO
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CampoProduto(
@@ -57,11 +64,14 @@ fun CampoProduto(
     }
 }
 
+// 3. TELA PRINCIPAL
 @Composable
-fun CadastroProdutoScreen() {
+fun CadastroProdutoScreen(navController: NavController, produtoDao: ProdutoDao) {
     val scrollState = rememberScrollState()
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
-    // Estados para os campos de texto
+    // Estados dos campos
     var nome by remember { mutableStateOf("") }
     var marca by remember { mutableStateOf("") }
     var material by remember { mutableStateOf("") }
@@ -70,11 +80,9 @@ fun CadastroProdutoScreen() {
     var categoria by remember { mutableStateOf("") }
     var estoque by remember { mutableStateOf("") }
 
-    // Gap reduzido para 4dp para que categoria/qtde fiquem bem próximas das de cima
     val gap = 4.dp
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Imagem de Fundo (Logomarca KM)
         Image(
             painter = painterResource(id = R.drawable.fundo_preto),
             contentDescription = null,
@@ -89,10 +97,8 @@ fun CadastroProdutoScreen() {
                 .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 1. Espaço para a logo circular que já está no fundo
             Spacer(modifier = Modifier.height(195.dp))
 
-            // Título centralizado abaixo da logo
             Text(
                 text = "Cadastro Produto",
                 color = Color.White,
@@ -100,7 +106,6 @@ fun CadastroProdutoScreen() {
                 fontWeight = FontWeight.Bold
             )
 
-            // 2. Foto posicionada à direita
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
                 Box(
                     modifier = Modifier
@@ -115,7 +120,6 @@ fun CadastroProdutoScreen() {
 
             Spacer(modifier = Modifier.height(gap))
 
-            // 3. Bloco de campos com espaçamento unificado
             CampoProduto("Nome Produto", nome, { nome = it })
             Spacer(modifier = Modifier.height(gap))
 
@@ -128,10 +132,7 @@ fun CadastroProdutoScreen() {
             CampoProduto("Código Interno", codigo, { codigo = it })
             Spacer(modifier = Modifier.height(gap))
 
-            // Caixa de descrição com altura fixa
-            CampoProduto("Descrição", descricao, { descricao = it }, Modifier.height(85.dp))
-
-            // Espaçamento idêntico para Categoria e Qtde subirem
+            CampoProduto("Descrição", descricao, { descricao = it }, Modifier.height(90.dp))
             Spacer(modifier = Modifier.height(gap))
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -145,11 +146,43 @@ fun CadastroProdutoScreen() {
                 )
             }
 
-            // 4. Botão Cadastrar posicionado logo abaixo (sem vãos grandes)
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = { /* Ação futuro */ },
+                onClick = {
+                    if (nome.isBlank() || categoria.isBlank()) {
+                        Toast.makeText(context, "Preencha Nome e Categoria!", Toast.LENGTH_SHORT).show()
+                    } else {
+                        scope.launch {
+                            try {
+                                // Criando o produto com TODOS os campos da sua Data Class
+                                val novoProduto = Produto(
+                                    nomeProduto = nome,
+                                    marca = marca,
+                                    material = material,
+                                    codigoInterno = codigo,
+                                    descricao = descricao,
+                                    categoria = categoria,
+                                    qtdeEstoque = estoque.toIntOrNull() ?: 0,
+                                    preco = 0.0,
+                                    imagemUrl = "" // Importante: Sua Data Class pede este campo!
+                                )
+
+                                produtoDao.inserir(novoProduto)
+
+                                Toast.makeText(context, "Produto cadastrado com sucesso!", Toast.LENGTH_SHORT).show()
+
+                                // Volta para a tela anterior
+                                navController.navigateUp()
+
+                            } catch (e: Exception) {
+                                // Se der erro, ele aparecerá no Logcat do Android Studio
+                                Log.e("ERRO_CADASTRO", "Erro ao salvar: ${e.message}")
+                                Toast.makeText(context, "Erro ao salvar no banco!", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    }
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = CorOuroEnvelhecido),
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier.fillMaxWidth().height(50.dp)
@@ -157,14 +190,7 @@ fun CadastroProdutoScreen() {
                 Text("Cadastrar", color = Color.Black, fontWeight = FontWeight.Bold)
             }
 
-            // Espaço final para o scroll não cortar o botão
             Spacer(modifier = Modifier.height(40.dp))
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewCadastroProduto() {
-    CadastroProdutoScreen()
 }

@@ -1,16 +1,18 @@
 [versions]
-agp = "8.13.2"
+agp = "8.13.2"  # A versão 9.x ainda causa muitos bugs de sincronia
 kotlin = "2.0.21"
-coreKtx = "1.13.1"
+coreKtx = "1.15.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
-lifecycleRuntimeKtx = "2.8.6"
+lifecycleRuntimeKtx = "2.8.7"
 activityCompose = "1.9.3"
-composeBom = "2024.04.01"
+composeBom = "2024.10.01"
 room = "2.6.1"
-ksp = "2.0.21-1.0.27"
 
+# O SEGREDO ESTÁ AQUI: O KSP deve começar com a versão do Kotlin (2.0.21)
+# seguido do sufixo da release do KSP (ex: -1.0.27)
+ksp = "2.0.21-1.0.27"
 
 
 [libraries]

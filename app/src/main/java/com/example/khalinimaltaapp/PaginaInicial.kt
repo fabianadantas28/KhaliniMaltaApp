@@ -25,7 +25,8 @@ val CorOuroKhalini = Color(0xFFC79E5E)
 
 @Composable
 fun PaginaPrincipalKM(
-    onAbrirMenu: () -> Unit = {}
+    onAbrirMenu: () -> Unit,
+    onIrParaLogin: () -> Unit // 1. ADICIONADO: Agora a tela reconhece esta ação
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -125,13 +126,15 @@ fun PaginaPrincipalKM(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BotaoInferior(icon = R.drawable.baseline_home_24, label = "Início", aoClicar = { /* Início */ })
+            // 2. AJUSTADO: Usando o nome correto que definimos no topo
+            BotaoInferior(icon = R.drawable.baseline_home_24, label = "Início", aoClicar = onIrParaLogin)
             Spacer(modifier = Modifier.width(45.dp))
             BotaoInferior(icon = android.R.drawable.ic_dialog_dialer, label = "Menu", aoClicar = onAbrirMenu)
         }
     }
 }
 
+// ... Restante das funções CardStatus e BotaoInferior (permanecem iguais) ...
 @Composable
 fun CardStatus(titulo: String, valor: String? = null, iconRes: Int? = null) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -159,8 +162,6 @@ fun CardStatus(titulo: String, valor: String? = null, iconRes: Int? = null) {
 
 @Composable
 fun BotaoInferior(icon: Int, label: String, aoClicar: () -> Unit) {
-    // Agora o clickable está em uma Column que envolve tudo com um pequeno padding
-    // facilitando o toque do usuário.
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -188,9 +189,9 @@ fun BotaoInferior(icon: Int, label: String, aoClicar: () -> Unit) {
     }
 }
 
-
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun PreviewPaginaPrincipalKM() {
-    PaginaPrincipalKM()
+    // Para o Preview não dar erro, passamos funções vazias
+    PaginaPrincipalKM(onAbrirMenu = {}, onIrParaLogin = {})
 }

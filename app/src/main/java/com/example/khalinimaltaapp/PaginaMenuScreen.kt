@@ -19,7 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// 1. DEFINIÇÃO DO MODELO (Tem que estar aqui para não dar erro de referência)
+// Modelo de dados para os itens do menu
 data class MenuItemData(
     val titulo: String,
     val icone: ImageVector,
@@ -29,8 +29,12 @@ data class MenuItemData(
 val CorOuroMenuFixo = Color(0xFFC79E5E)
 
 @Composable
-fun MenuScreen(onVoltar: () -> Unit) {
+fun MenuScreen(
+    onVoltar: () -> Unit,
+    onNavegar: (String) -> Unit // Esta função fará a mágica da navegação
+) {
     Box(modifier = Modifier.fillMaxSize()) {
+        // Imagem de Fundo
         Image(
             painter = painterResource(id = R.drawable.fundo_khalini),
             contentDescription = null,
@@ -44,6 +48,7 @@ fun MenuScreen(onVoltar: () -> Unit) {
                 .padding(horizontal = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Espaçamento para a logo que está na imagem de fundo
             Spacer(modifier = Modifier.height(210.dp))
 
             Text(
@@ -56,12 +61,12 @@ fun MenuScreen(onVoltar: () -> Unit) {
 
             Spacer(modifier = Modifier.height(25.dp))
 
-            // GRID DE OPÇÕES
+            // Grid de Opções
             Box(modifier = Modifier.weight(1f)) {
-                MenuGrid()
+                MenuGrid(onNavegar)
             }
 
-            // BOTÃO VOLTAR
+            // Botão Voltar
             OutlinedButton(
                 onClick = onVoltar,
                 modifier = Modifier
@@ -73,16 +78,18 @@ fun MenuScreen(onVoltar: () -> Unit) {
                 Text("VOLTAR AO INÍCIO", color = CorOuroMenuFixo, fontWeight = FontWeight.Bold)
             }
 
+            // Espaçamento final para o rodapé da imagem
             Spacer(modifier = Modifier.height(110.dp))
         }
     }
 }
 
 @Composable
-fun MenuGrid() {
+fun MenuGrid(onItemClick: (String) -> Unit) {
+    // CORREÇÃO: O nome da rota deve ser exatamente o mesmo que está no NavHost da MainActivity
     val itens = listOf(
-        MenuItemData("Clientes", Icons.Default.Person, "clientes"),
-        MenuItemData("Produtos", Icons.Default.ShoppingCart, "produtos"),
+        MenuItemData("Clientes", Icons.Default.Person, "lista_clientes"),
+        MenuItemData("Produtos", Icons.Default.ShoppingCart, "categorias"), // MUDAMOS DE "pag_categorias" PARA "categorias"
         MenuItemData("Vendas", Icons.Default.ThumbUp, "vendas"),
         MenuItemData("Relatórios", Icons.Default.Info, "relatorios"),
         MenuItemData("Estoque", Icons.Default.Build, "estoque")
@@ -95,17 +102,17 @@ fun MenuGrid() {
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(itens) { item ->
-            MenuCard(item)
+            MenuCard(item, onItemClick)
         }
     }
 }
 
 @Composable
-fun MenuCard(item: MenuItemData) {
+fun MenuCard(item: MenuItemData, onClick: (String) -> Unit) {
     Card(
         modifier = Modifier
             .aspectRatio(1f)
-            .clickable { /* Ação futura */ },
+            .clickable { onClick(item.rota) }, // Ativa o clique passando a rota
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.7f)),
         border = androidx.compose.foundation.BorderStroke(1.dp, CorOuroMenuFixo)
@@ -122,7 +129,12 @@ fun MenuCard(item: MenuItemData) {
                 modifier = Modifier.size(40.dp)
             )
             Spacer(modifier = Modifier.height(12.dp))
-            Text(text = item.titulo, color = CorOuroMenuFixo, fontSize = 14.sp)
+            Text(
+                text = item.titulo,
+                color = CorOuroMenuFixo,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium
+            )
         }
     }
 }

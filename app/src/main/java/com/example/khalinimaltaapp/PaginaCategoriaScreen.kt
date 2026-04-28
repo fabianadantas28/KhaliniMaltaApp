@@ -1,5 +1,6 @@
 package com.example.khalinimaltaapp
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,24 +16,25 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 
-// TOM DE OURO DA FIGURA ENVIADA (Dourado Terroso)
+// Mantendo suas cores originais
 val CorOuroCaixinha = Color(0xFFC39953)
 val CorOuroBorda = Color(0xFFC79E5E)
 
 data class CategoriaItem(
     val nome: String,
     val imagemRes: Int,
-    val rota: String
+    val rotaBase: String // Rota base para a lista
 )
 
 @Composable
-fun PaginaCategorias(navController: NavController) {
+fun PaginaCategorias(
+    navController: NavController,
+    onIrParaCadastroProduto: () -> Unit // Nova função para o botão
+) {
     Box(modifier = Modifier.fillMaxSize()) {
 
         // FUNDO
@@ -49,8 +51,7 @@ fun PaginaCategorias(navController: NavController) {
                 .padding(horizontal = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // DESCER O NOME CATEGORIAS
-            Spacer(modifier = Modifier.height(250.dp))
+            Spacer(modifier = Modifier.height(230.dp))
 
             Text(
                 text = "CATEGORIAS",
@@ -62,18 +63,37 @@ fun PaginaCategorias(navController: NavController) {
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // GRID
+            // GRID DE CATEGORIAS
             Box(modifier = Modifier.weight(1f)) {
                 CategoriaGrid(navController)
             }
 
-            // SUBIR O BOTÃO VOLTAR
+            // --- NOVO BOTÃO: CADASTRAR PRODUTO ---
+            Button(
+                onClick = onIrParaCadastroProduto,
+                modifier = Modifier
+                    .fillMaxWidth(0.85f)
+                    .height(45.dp),
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = CorOuroBorda)
+            ) {
+                Text(
+                    "CADASTRAR NOVO PRODUTO",
+                    color = Color.Black,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.ExtraBold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // BOTÃO VOLTAR
             OutlinedButton(
                 onClick = { navController.popBackStack() },
                 modifier = Modifier
                     .fillMaxWidth(0.85f)
                     .height(42.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, CorOuroBorda),
+                border = BorderStroke(1.dp, CorOuroBorda),
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
                     containerColor = Color.Black.copy(alpha = 0.8f)
@@ -87,21 +107,21 @@ fun PaginaCategorias(navController: NavController) {
                 )
             }
 
-            // Margem inferior para o botão ficar na posição correta
-            Spacer(modifier = Modifier.height(135.dp))
+            Spacer(modifier = Modifier.height(100.dp))
         }
     }
 }
 
 @Composable
 fun CategoriaGrid(navController: NavController) {
+    // Definindo as categorias que levarão para a lista_produtos/{nome}
     val categorias = listOf(
-        CategoriaItem("Anéis", R.drawable.anel, "aneis"),
-        CategoriaItem("Colares", R.drawable.colar, "colares"),
-        CategoriaItem("Brincos", R.drawable.brinco, "brincos"),
-        CategoriaItem("Pulseiras", R.drawable.pulseira, "pulseiras"),
-        CategoriaItem("Tornozeleiras", R.drawable.tornozeleira, "tornozeleiras"),
-        CategoriaItem("Acessórios", R.drawable.acessorios, "acessorios")
+        CategoriaItem("Anéis", R.drawable.anel, "lista_produtos/Anéis"),
+        CategoriaItem("Colares", R.drawable.colar, "lista_produtos/Colares"),
+        CategoriaItem("Brincos", R.drawable.brinco, "lista_produtos/Brincos"),
+        CategoriaItem("Pulseiras", R.drawable.pulseira, "lista_produtos/Pulseiras"),
+        CategoriaItem("Tornozeleiras", R.drawable.tornozeleira, "lista_produtos/Tornozeleiras"),
+        CategoriaItem("Acessórios", R.drawable.acessorios, "lista_produtos/Acessórios")
     )
 
     LazyVerticalGrid(
@@ -121,15 +141,15 @@ fun CategoriaCard(item: CategoriaItem, navController: NavController) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(1.3f) // Caixas menores e mais baixas
-            .clickable { navController.navigate(item.rota) },
+            .aspectRatio(1.3f)
+            .clickable { navController.navigate(item.rotaBase) },
         shape = RoundedCornerShape(10.dp),
-        border = androidx.compose.foundation.BorderStroke(0.5.dp, CorOuroBorda)
+        border = BorderStroke(0.5.dp, CorOuroBorda)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(CorOuroCaixinha), // COR EXATA DA SUA IMAGEM
+                .background(CorOuroCaixinha),
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -137,7 +157,7 @@ fun CategoriaCard(item: CategoriaItem, navController: NavController) {
                     painter = painterResource(id = item.imagemRes),
                     contentDescription = item.nome,
                     modifier = Modifier.size(38.dp),
-                    colorFilter = ColorFilter.tint(Color.Black) // Ícones em preto para contraste
+                    colorFilter = ColorFilter.tint(Color.Black)
                 )
 
                 Spacer(modifier = Modifier.height(2.dp))
@@ -151,10 +171,4 @@ fun CategoriaCard(item: CategoriaItem, navController: NavController) {
             }
         }
     }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun PreviewPaginaCategorias() {
-    PaginaCategorias(navController = rememberNavController())
 }
