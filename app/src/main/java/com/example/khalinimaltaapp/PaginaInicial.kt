@@ -53,7 +53,7 @@ fun PaginaPrincipalKM(
                 lineHeight = 20.sp
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(25.dp))
 
             Text(
                 text = "Resumo do Dia",

@@ -84,7 +84,7 @@ fun CadastroProdutoScreen(navController: NavController, produtoDao: ProdutoDao) 
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
-            painter = painterResource(id = R.drawable.fundo_preto),
+            painter = painterResource(id = R.drawable.fundo_logomarca),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.FillBounds
@@ -97,7 +97,7 @@ fun CadastroProdutoScreen(navController: NavController, produtoDao: ProdutoDao) 
                 .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(195.dp))
+            Spacer(modifier = Modifier.height(150.dp))
 
             Text(
                 text = "Cadastro Produto",
