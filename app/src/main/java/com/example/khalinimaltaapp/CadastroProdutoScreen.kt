@@ -76,6 +76,7 @@ fun CadastroProdutoScreen(navController: NavController, produtoDao: ProdutoDao) 
     var marca by remember { mutableStateOf("") }
     var material by remember { mutableStateOf("") }
     var codigo by remember { mutableStateOf("") }
+    var preco by remember { mutableStateOf("") } // NOVO CAMPO ADICIONADO
     var descricao by remember { mutableStateOf("") }
     var categoria by remember { mutableStateOf("") }
     var estoque by remember { mutableStateOf("") }
@@ -106,6 +107,7 @@ fun CadastroProdutoScreen(navController: NavController, produtoDao: ProdutoDao) 
                 fontWeight = FontWeight.Bold
             )
 
+            // Espaço para Foto
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
                 Box(
                     modifier = Modifier
@@ -129,7 +131,18 @@ fun CadastroProdutoScreen(navController: NavController, produtoDao: ProdutoDao) 
             }
             Spacer(modifier = Modifier.height(gap))
 
-            CampoProduto("Código Interno", codigo, { codigo = it })
+            // Linha com Código e Preço
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                CampoProduto("Código Interno", codigo, { codigo = it }, Modifier.weight(1f))
+                CampoProduto(
+                    label = "Preço (R$)",
+                    value = preco,
+                    onValueChange = { preco = it },
+                    modifier = Modifier.weight(1f),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+            }
+
             Spacer(modifier = Modifier.height(gap))
 
             CampoProduto("Descrição", descricao, { descricao = it }, Modifier.height(90.dp))
@@ -150,12 +163,12 @@ fun CadastroProdutoScreen(navController: NavController, produtoDao: ProdutoDao) 
 
             Button(
                 onClick = {
-                    if (nome.isBlank() || categoria.isBlank()) {
-                        Toast.makeText(context, "Preencha Nome e Categoria!", Toast.LENGTH_SHORT).show()
+                    if (nome.isBlank() || categoria.isBlank() || preco.isBlank()) {
+                        Toast.makeText(context, "Preencha Nome, Categoria e Preço!", Toast.LENGTH_SHORT).show()
                     } else {
                         scope.launch {
                             try {
-                                // Criando o produto com TODOS os campos da sua Data Class
+                                // Criando o produto com os valores convertidos
                                 val novoProduto = Produto(
                                     nomeProduto = nome,
                                     marca = marca,
@@ -164,19 +177,16 @@ fun CadastroProdutoScreen(navController: NavController, produtoDao: ProdutoDao) 
                                     descricao = descricao,
                                     categoria = categoria,
                                     qtdeEstoque = estoque.toIntOrNull() ?: 0,
-                                    preco = 0.0,
-                                    imagemUrl = "" // Importante: Sua Data Class pede este campo!
+                                    preco = preco.replace(",", ".").toDoubleOrNull() ?: 0.0, // Converte preço para Double
+                                    imagemUrl = "" // String vazia para não dar erro
                                 )
 
                                 produtoDao.inserir(novoProduto)
 
                                 Toast.makeText(context, "Produto cadastrado com sucesso!", Toast.LENGTH_SHORT).show()
-
-                                // Volta para a tela anterior
                                 navController.navigateUp()
 
                             } catch (e: Exception) {
-                                // Se der erro, ele aparecerá no Logcat do Android Studio
                                 Log.e("ERRO_CADASTRO", "Erro ao salvar: ${e.message}")
                                 Toast.makeText(context, "Erro ao salvar no banco!", Toast.LENGTH_LONG).show()
                             }
