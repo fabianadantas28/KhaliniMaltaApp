@@ -77,9 +77,19 @@ fun CriarSenhaScreen(
 
             Button(
                 onClick = {
-                    // Aqui acontece a mágica: ele salva NOME (da tela 1) + SENHA (da tela 2)
-                    viewModel.salvarNoBanco()
-                    onFinalizar()
+                    // 1. Verificamos se as senhas batem antes de tentar salvar
+                    if (viewModel.senha.isNotEmpty() && viewModel.senha == viewModel.confirmarSenha) {
+
+                        // 2. Chama a função que grava no SQLite
+                        viewModel.salvarNoBanco()
+
+                        // 3. Navega para o Login
+                        onFinalizar()
+
+                    } else {
+                        // Caso as senhas estejam diferentes ou vazias
+                        // Log.w ou um Toast ajudaria aqui
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()

@@ -11,35 +11,48 @@ import kotlinx.coroutines.launch
 
 class CadastroProdutoViewModel(private val produtoDao: ProdutoDao) : ViewModel() {
 
-    // 1. Variáveis para segurar o que o usuário digita (Estado)
-    var nomeProduto by mutableStateOf("")
+    // Estados que a Screen vai observar
+    var nome by mutableStateOf("")
+    var marca by mutableStateOf("")
+    var material by mutableStateOf("")
+    var codigo by mutableStateOf("")
+    var preco by mutableStateOf("")
     var descricao by mutableStateOf("")
-    var preco by mutableStateOf("") // Adicionamos o preço aqui!
     var categoria by mutableStateOf("")
-    var imagemUrl by mutableStateOf("")
+    var estoque by mutableStateOf("")
 
-    // 2. Função para salvar no banco de dados
-    fun salvarProduto(onSucesso: () -> Unit) {
-        viewModelScope.launch {
-            val novoProduto = Produto(
-                nomeProduto = nomeProduto, // Ajustado para o nome correto do parâmetro
-                descricao = descricao,
-                preco = preco.toDoubleOrNull() ?: 0.0,
-                categoria = categoria,
-                imagemUrl = imagemUrl
-            )
-            produtoDao.inserir(novoProduto)
-            limparCampos()
-            onSucesso()
+    fun salvarProduto(onSucesso: () -> Unit, onError: (String) -> Unit) {
+        // Validação básica
+        if (nome.isBlank() || categoria.isBlank() || preco.isBlank()) {
+            onError("Preencha Nome, Categoria e Preço!")
+            return
         }
 
+        viewModelScope.launch {
+            try {
+                val novoProduto = Produto(
+                    nomeProduto = nome,
+                    marca = marca,
+                    material = material,
+                    codigoInterno = codigo,
+                    descricao = descricao,
+                    categoria = categoria,
+                    qtdeEstoque = estoque.toIntOrNull() ?: 0,
+                    preco = preco.replace(",", ".").toDoubleOrNull() ?: 0.0,
+                    imagemUrl = "" // Campo obrigatório na Entity
+                )
+
+                produtoDao.inserir(novoProduto)
+                limparCampos()
+                onSucesso()
+            } catch (e: Exception) {
+                onError("Erro ao salvar: ${e.message}")
+            }
+        }
     }
 
     private fun limparCampos() {
-        nomeProduto = ""
-        descricao = ""
-        preco = ""
-        categoria = ""
-        imagemUrl = ""
+        nome = ""; marca = ""; material = ""; codigo = ""
+        preco = ""; descricao = ""; categoria = ""; estoque = ""
     }
 }

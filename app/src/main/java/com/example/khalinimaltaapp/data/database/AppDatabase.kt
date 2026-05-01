@@ -14,7 +14,7 @@ import com.example.khalinimaltaapp.data.dao.ProdutoDao
 // ADICIONEI O Produto::class AQUI ABAIXO:
 @Database(
     entities = [Usuario::class, Cliente::class, Produto::class],
-    version = 2,
+    version = 3, //Mantemos a versão 3 porque houve mudança de estrutura
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

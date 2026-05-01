@@ -19,4 +19,7 @@ interface ClienteDao {
     @Query("DELETE FROM clientes WHERE id = :id")
     suspend fun deletarPorId(id: Int): Unit // Adicione : Unit
 
+    // Adicione esta linha para o Login do João funcionar depois:
+    @Query("SELECT * FROM clientes WHERE email = :email AND senha = :senha LIMIT 1")
+    suspend fun buscarPorEmailESenha(email: String, senha: String): Cliente?
 }

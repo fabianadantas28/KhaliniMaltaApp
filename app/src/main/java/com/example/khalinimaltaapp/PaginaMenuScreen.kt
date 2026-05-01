@@ -92,7 +92,8 @@ fun MenuGrid(onItemClick: (String) -> Unit) {
         MenuItemData("Produtos", Icons.Default.ShoppingCart, "categorias"), // MUDAMOS DE "pag_categorias" PARA "categorias"
         MenuItemData("Vendas", Icons.Default.ThumbUp, "vendas"),
         MenuItemData("Relatórios", Icons.Default.Info, "relatorios"),
-        MenuItemData("Estoque", Icons.Default.Build, "estoque")
+        MenuItemData("Estoque", Icons.Default.Build, "controle_estoque")
+
     )
 
     LazyVerticalGrid(

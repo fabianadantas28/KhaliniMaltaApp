@@ -1,7 +1,11 @@
 package com.example.khalinimaltaapp
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -11,119 +15,155 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.example.khalinimaltaapp.data.Produto
+import com.example.khalinimaltaapp.viewmodel.RegistroVendaViewModel
+
+// Cor única para evitar erro de "Conflicting declarations"
+val CorDouradaVenda = Color(0xFFC39953)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegistroVendaScreen() {
+fun RegistroVendaScreen(
+    navController: NavController,
+    vModel: RegistroVendaViewModel
+) {
+    var buscaTexto by remember { mutableStateOf("") }
+    var nomeCliente by remember { mutableStateOf("") }
+    var telefoneCliente by remember { mutableStateOf("") }
+    var formaPagamento by remember { mutableStateOf("Selecione...") }
+    var expandirPagamento by remember { mutableStateOf(false) }
+
+    val produtosSugeridos by vModel.produtosEncontrados.collectAsState()
+    var produtoSelecionado by remember { mutableStateOf<Produto?>(null) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
             .padding(16.dp)
     ) {
-        // Barra Superior
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 24.dp)
-        ) {
-            Icon(Icons.Default.ArrowBack, contentDescription = null, tint = CorOuroKhalini)
-            Spacer(modifier = Modifier.width(16.dp))
-            Icon(Icons.Default.ShoppingCart, contentDescription = null, tint = CorOuroKhalini)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Registro de Venda", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        // Cabeçalho
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 24.dp)) {
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(Icons.Default.ArrowBack, contentDescription = null, tint = CorDouradaVenda)
+            }
+            Text(" Registro de Venda", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
 
-        // Buscar Produtos
-        Text("Buscar Produtos", color = CorOuroKhalini, fontSize = 14.sp)
-        CampoRegistro(hint = "Digite o nome ou código do produto...", icon = Icons.Default.Search)
+        // Busca
+        Text("Buscar Produto", color = CorDouradaVenda, fontSize = 14.sp)
+        OutlinedTextField(
+            value = buscaTexto,
+            onValueChange = {
+                buscaTexto = it
+                vModel.buscarProduto(it)
+                if (it.isEmpty()) produtoSelecionado = null
+            },
+            placeholder = { Text("Digite o nome da joia...", color = Color.Gray) },
+            leadingIcon = { Icon(Icons.Default.Search, null, tint = CorDouradaVenda) },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(8.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                focusedBorderColor = CorDouradaVenda,
+                unfocusedContainerColor = Color(0xFF1A1A1A),
+                focusedContainerColor = Color(0xFF1A1A1A)
+            )
+        )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        // Lista de Sugestões
+        if (buscaTexto.isNotEmpty() && produtoSelecionado == null) {
+            Card(
+                modifier = Modifier.fillMaxWidth().heightIn(max = 150.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A))
+            ) {
+                LazyColumn {
+                    items(produtosSugeridos) { produto ->
+                        ListItem(
+                            modifier = Modifier.clickable {
+                                produtoSelecionado = produto
+                                buscaTexto = produto.nomeProduto
+                            },
+                            headlineContent = { Text(produto.nomeProduto, color = Color.White) },
+                            supportingContent = { Text("Estoque: ${produto.qtdeEstoque} | R$ ${produto.preco}", color = Color.Gray) }
+                        )
+                    }
+                }
+            }
+        }
 
-        // Informações do Cliente
-        Text("Informações do Cliente", color = CorOuroKhalini, fontSize = 14.sp)
-        CampoRegistro(hint = "Nome do cliente (opcional)", icon = Icons.Default.Face) // Ícone universal
-        Spacer(modifier = Modifier.height(8.dp))
-        CampoRegistro(hint = "Telefone do cliente (para WhatsApp)", icon = null)
+        Spacer(modifier = Modifier.height(16.dp))
 
-        Spacer(modifier = Modifier.height(20.dp))
+        // Dados do Cliente
+        CampoVendaAux("Nome do Cliente", Icons.Default.Person, nomeCliente) { nomeCliente = it }
+        CampoVendaAux("WhatsApp", Icons.Default.Phone, telefoneCliente) { telefoneCliente = it }
 
-        // Forma de Pagamento
-        Text("Forma de Pagamento", color = CorOuroKhalini, fontSize = 14.sp)
-        // Usei o ícone 'Star' que é garantido que não dará erro de build
-        CampoRegistro(hint = "Selecione a forma de pagamento", icon = Icons.Default.Star, isDropdown = true)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Pagamento
+        Text("Forma de Pagamento", color = CorDouradaVenda, fontSize = 14.sp)
+        Box {
+            OutlinedButton(
+                onClick = { expandirPagamento = true },
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                border = BorderStroke(1.dp, Color.DarkGray)
+            ) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(formaPagamento, color = Color.White)
+                    Icon(Icons.Default.ArrowDropDown, null, tint = CorDouradaVenda)
+                }
+            }
+            DropdownMenu(expanded = expandirPagamento, onDismissRequest = { expandirPagamento = false }) {
+                listOf("Dinheiro", "Cartão", "Pix").forEach {
+                    DropdownMenuItem(text = { Text(it) }, onClick = {
+                        formaPagamento = it
+                        expandirPagamento = false
+                    })
+                }
+            }
+        }
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Botão Confirmar
-        Button(
-            onClick = { },
-            modifier = Modifier.fillMaxWidth().height(48.dp).padding(bottom = 8.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-            border = androidx.compose.foundation.BorderStroke(1.dp, CorOuroKhalini),
-            shape = RoundedCornerShape(8.dp)
+        // Total e Botão
+        Card(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
+            border = BorderStroke(1.dp, CorDouradaVenda)
         ) {
-            Icon(Icons.Default.Done, contentDescription = null, tint = CorOuroKhalini)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Confirmar Venda", color = CorOuroKhalini)
+            Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("TOTAL:", color = Color.White, fontWeight = FontWeight.Bold)
+                Text("R$ ${produtoSelecionado?.preco ?: 0.0}", color = CorDouradaVenda, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+            }
         }
 
-        // Botões Enviar e Cancelar
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(
-                onClick = { },
-                modifier = Modifier.weight(1f).height(48.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                border = androidx.compose.foundation.BorderStroke(1.dp, CorOuroKhalini),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Icon(Icons.Default.Email, contentDescription = null, tint = CorOuroKhalini)
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("Enviar WhatsApp", color = CorOuroKhalini, fontSize = 12.sp)
-            }
-
-            Button(
-                onClick = { },
-                modifier = Modifier.weight(1f).height(48.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Icon(Icons.Default.Clear, contentDescription = null, tint = Color.White)
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("Cancelar", color = Color.White, fontSize = 12.sp)
-            }
+        Button(
+            onClick = {
+                produtoSelecionado?.let { vModel.confirmarVenda(it, 1) }
+                navController.popBackStack()
+            },
+            enabled = produtoSelecionado != null && formaPagamento != "Selecione...",
+            modifier = Modifier.fillMaxWidth().height(50.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = CorDouradaVenda),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Text("CONFIRMAR VENDA", color = Color.Black, fontWeight = FontWeight.Bold)
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CampoRegistro(hint: String, icon: androidx.compose.ui.graphics.vector.ImageVector?, isDropdown: Boolean = false) {
-    var text by remember { mutableStateOf("") }
+fun CampoVendaAux(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, valor: String, onValueChange: (String) -> Unit) {
     OutlinedTextField(
-        value = text,
-        onValueChange = { text = it },
-        placeholder = { Text(hint, color = Color.Gray, fontSize = 14.sp) },
-        leadingIcon = if (icon != null) { { Icon(icon, contentDescription = null, tint = CorOuroKhalini) } } else null,
-        trailingIcon = if (isDropdown) { { Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = Color.Gray) } } else null,
+        value = valor,
+        onValueChange = onValueChange,
+        label = { Text(label, color = Color.Gray) },
+        leadingIcon = { Icon(icon, null, tint = CorDouradaVenda) },
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-        shape = RoundedCornerShape(8.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = Color(0xFF1A1A1A),
-            unfocusedContainerColor = Color(0xFF1A1A1A),
-            focusedBorderColor = CorOuroKhalini,
-            unfocusedBorderColor = Color.DarkGray,
-            focusedTextColor = Color.White,
-            unfocusedTextColor = Color.White
-        )
+        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White)
     )
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun PreviewRegistroVenda() {
-    RegistroVendaScreen()
 }

@@ -74,7 +74,7 @@ fun CadastroClienteScreen(
 
             CampoExterno("CPF", viewModel.cpf, { viewModel.cpf = it }, corDourada)
             CampoExterno("E-mail", viewModel.email, { viewModel.email = it }, corDourada)
-            CampoExterno("Complemento", complementoLocal, { complementoLocal = it }, corDourada)
+            CampoExterno("Complemento", viewModel.complemento, { viewModel.complemento = it }, corDourada)
 
             Spacer(modifier = Modifier.height(10.dp))
 

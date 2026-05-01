@@ -1,6 +1,5 @@
 package com.example.khalinimaltaapp
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
@@ -17,19 +16,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.khalinimaltaapp.data.Produto
-import com.example.khalinimaltaapp.data.dao.ProdutoDao
-import kotlinx.coroutines.launch
+import com.example.khalinimaltaapp.viewmodel.CadastroProdutoViewModel
 
-// 1. DEFINIÇÃO DA COR
 val CorOuroEnvelhecido = Color(0xFFC79E5E)
 
-// 2. FUNÇÃO AUXILIAR DO CAMPO
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CampoProduto(
@@ -37,7 +33,9 @@ fun CampoProduto(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    readOnly: Boolean = false,
+    trailingIcon: @Composable (() -> Unit)? = null
 ) {
     Column(modifier = modifier) {
         Text(
@@ -52,6 +50,9 @@ fun CampoProduto(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp),
             keyboardOptions = keyboardOptions,
+            readOnly = readOnly,
+            trailingIcon = trailingIcon,
+            textStyle = TextStyle(color = Color.White),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedTextColor = Color.White,
                 unfocusedTextColor = Color.White,
@@ -64,24 +65,21 @@ fun CampoProduto(
     }
 }
 
-// 3. TELA PRINCIPAL
 @Composable
-fun CadastroProdutoScreen(navController: NavController, produtoDao: ProdutoDao) {
+fun CadastroProdutoScreen(navController: NavController, viewModel: CadastroProdutoViewModel) {
     val scrollState = rememberScrollState()
-    val scope = rememberCoroutineScope()
     val context = LocalContext.current
-
-    // Estados dos campos
-    var nome by remember { mutableStateOf("") }
-    var marca by remember { mutableStateOf("") }
-    var material by remember { mutableStateOf("") }
-    var codigo by remember { mutableStateOf("") }
-    var preco by remember { mutableStateOf("") } // NOVO CAMPO ADICIONADO
-    var descricao by remember { mutableStateOf("") }
-    var categoria by remember { mutableStateOf("") }
-    var estoque by remember { mutableStateOf("") }
-
     val gap = 4.dp
+
+    val categoriasOficiais = listOf(
+        "Anéis",
+        "Colares",
+        "Brincos",
+        "Pulseiras",
+        "Tornozeleiras",
+        "Acessórios"
+    )
+    var menuExpandido by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -107,7 +105,6 @@ fun CadastroProdutoScreen(navController: NavController, produtoDao: ProdutoDao) 
                 fontWeight = FontWeight.Bold
             )
 
-            // Espaço para Foto
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
                 Box(
                     modifier = Modifier
@@ -122,22 +119,23 @@ fun CadastroProdutoScreen(navController: NavController, produtoDao: ProdutoDao) 
 
             Spacer(modifier = Modifier.height(gap))
 
-            CampoProduto("Nome Produto", nome, { nome = it })
+            CampoProduto("Nome Produto", viewModel.nome, { viewModel.nome = it })
+
             Spacer(modifier = Modifier.height(gap))
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                CampoProduto("Marca", marca, { marca = it }, Modifier.weight(1f))
-                CampoProduto("Material", material, { material = it }, Modifier.weight(1f))
+                CampoProduto("Marca", viewModel.marca, { viewModel.marca = it }, Modifier.weight(1f))
+                CampoProduto("Material", viewModel.material, { viewModel.material = it }, Modifier.weight(1f))
             }
+
             Spacer(modifier = Modifier.height(gap))
 
-            // Linha com Código e Preço
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                CampoProduto("Código Interno", codigo, { codigo = it }, Modifier.weight(1f))
+                CampoProduto("Código Interno", viewModel.codigo, { viewModel.codigo = it }, Modifier.weight(1f))
                 CampoProduto(
                     label = "Preço (R$)",
-                    value = preco,
-                    onValueChange = { preco = it },
+                    value = viewModel.preco,
+                    onValueChange = { viewModel.preco = it },
                     modifier = Modifier.weight(1f),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
@@ -145,15 +143,49 @@ fun CadastroProdutoScreen(navController: NavController, produtoDao: ProdutoDao) 
 
             Spacer(modifier = Modifier.height(gap))
 
-            CampoProduto("Descrição", descricao, { descricao = it }, Modifier.height(90.dp))
+            CampoProduto("Descrição", viewModel.descricao, { viewModel.descricao = it }, Modifier.height(90.dp))
+
             Spacer(modifier = Modifier.height(gap))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                CampoProduto("Categoria", categoria, { categoria = it }, Modifier.weight(1.5f))
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Bottom) {
+                Box(modifier = Modifier.weight(1.5f)) {
+                    CampoProduto(
+                        label = "Categoria",
+                        value = viewModel.categoria,
+                        onValueChange = {},
+                        readOnly = true,
+                        trailingIcon = {
+                            IconButton(onClick = { menuExpandido = true }) {
+                                Icon(
+                                    painter = painterResource(id = android.R.drawable.arrow_down_float),
+                                    contentDescription = null,
+                                    tint = CorOuroEnvelhecido
+                                )
+                            }
+                        }
+                    )
+
+                    DropdownMenu(
+                        expanded = menuExpandido,
+                        onDismissRequest = { menuExpandido = false },
+                        modifier = Modifier.fillMaxWidth(0.5f)
+                    ) {
+                        categoriasOficiais.forEach { nomeCat ->
+                            DropdownMenuItem(
+                                text = { Text(nomeCat) },
+                                onClick = {
+                                    viewModel.categoria = nomeCat
+                                    menuExpandido = false
+                                }
+                            )
+                        }
+                    }
+                }
+
                 CampoProduto(
                     label = "Qtde",
-                    value = estoque,
-                    onValueChange = { estoque = it },
+                    value = viewModel.estoque,
+                    onValueChange = { viewModel.estoque = it },
                     modifier = Modifier.weight(1f),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
@@ -163,35 +195,19 @@ fun CadastroProdutoScreen(navController: NavController, produtoDao: ProdutoDao) 
 
             Button(
                 onClick = {
-                    if (nome.isBlank() || categoria.isBlank() || preco.isBlank()) {
-                        Toast.makeText(context, "Preencha Nome, Categoria e Preço!", Toast.LENGTH_SHORT).show()
-                    } else {
-                        scope.launch {
-                            try {
-                                // Criando o produto com os valores convertidos
-                                val novoProduto = Produto(
-                                    nomeProduto = nome,
-                                    marca = marca,
-                                    material = material,
-                                    codigoInterno = codigo,
-                                    descricao = descricao,
-                                    categoria = categoria,
-                                    qtdeEstoque = estoque.toIntOrNull() ?: 0,
-                                    preco = preco.replace(",", ".").toDoubleOrNull() ?: 0.0, // Converte preço para Double
-                                    imagemUrl = "" // String vazia para não dar erro
-                                )
+                    viewModel.salvarProduto(
+                        onSucesso = {
+                            Toast.makeText(context, "Produto salvo com sucesso!", Toast.LENGTH_SHORT).show()
 
-                                produtoDao.inserir(novoProduto)
-
-                                Toast.makeText(context, "Produto cadastrado com sucesso!", Toast.LENGTH_SHORT).show()
-                                navController.navigateUp()
-
-                            } catch (e: Exception) {
-                                Log.e("ERRO_CADASTRO", "Erro ao salvar: ${e.message}")
-                                Toast.makeText(context, "Erro ao salvar no banco!", Toast.LENGTH_LONG).show()
+                            // CORREÇÃO AQUI: Rota limpa para o controle de estoque
+                            navController.navigate("controle_estoque") {
+                                popUpTo("cadastro_produto") { inclusive = true }
                             }
+                        },
+                        onError = { erro ->
+                            Toast.makeText(context, erro, Toast.LENGTH_LONG).show()
                         }
-                    }
+                    )
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = CorOuroEnvelhecido),
                 shape = RoundedCornerShape(8.dp),
