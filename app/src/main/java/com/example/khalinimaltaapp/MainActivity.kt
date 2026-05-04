@@ -12,15 +12,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.khalinimaltaapp.data.database.AppDatabase
 import com.example.khalinimaltaapp.ui.theme.KhaliniMaltaAppTheme
-import com.example.khalinimaltaapp.viewmodel.CadastroClienteViewModel
-import com.example.khalinimaltaapp.viewmodel.CadastroProdutoViewModel
-import com.example.khalinimaltaapp.viewmodel.ListaClientesViewModel
+import com.example.khalinimaltaapp.viewmodel.*
 import com.example.khalinimaltaapp.ui.relatorio.PaginaRelatorio
-import com.example.khalinimaltaapp.viewmodel.RelatoriosViewModel
-import com.example.khalinimaltaapp.viewmodel.RegistroVendaViewModel
-
-
-// IMPORTANTE: Verifique se este caminho abaixo é o mesmo onde você salvou a tela de estoque
+// Verifique se os caminhos abaixo estão corretos no seu projeto
 import com.example.khalinimaltaapp.ui.estoque.PaginaControleEstoque
 
 class MainActivity : ComponentActivity() {
@@ -32,20 +26,41 @@ class MainActivity : ComponentActivity() {
                 val context = LocalContext.current
                 val db = AppDatabase.getDatabase(context)
 
-                // ViewModel compartilhado para o fluxo de cadastro de cliente/senha
+                // ViewModel compartilhado para o fluxo de cadastro de cliente
                 val sharedViewModel: CadastroClienteViewModel = viewModel()
 
-                NavHost(navController = navController, startDestination = "home") {
+                NavHost(navController = navController, startDestination = "login") {
 
-                    // 1. Rota de Login
+                    // 1. ROTA DE LOGIN (Atualizada com NavController para a lógica do João)
                     composable(route = "login") {
                         LoginScreen(
+                            navController = navController,
                             onIrParaPaginaInicial = { navController.navigate("home") },
                             onIrParaCadastro = { navController.navigate("cadastro_cliente") }
                         )
                     }
 
-                    // 2. Rota de Cadastro de Cliente
+                    // 2. ROTA DE TROCA DE SENHA (Código do João - Primeiro Acesso)
+                    composable("troca_senha/{usuarioId}") { backStackEntry ->
+                        val usuarioId = backStackEntry.arguments?.getString("usuarioId")?.toInt() ?: 0
+                        TrocaSenhaScreen(
+                            usuarioId = usuarioId,
+                            onSenhaAtualizada = {
+                                navController.navigate("home") {
+                                    popUpTo("login") { inclusive = true }
+                                }
+                            }
+                        )
+                    }
+
+                    // 3. ROTA DE CADASTRO DE FUNCIONÁRIO (Código do João - Acesso Admin)
+                    composable("cadastro_usuario") {
+                        CadastroUsuarioScreen(
+                            onVoltar = { navController.popBackStack() }
+                        )
+                    }
+
+                    // 4. Rota de Cadastro de Cliente (Público)
                     composable(route = "cadastro_cliente") {
                         CadastroClienteScreen(
                             onContinuar = { navController.navigate("criar_senha") },
@@ -53,7 +68,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    // 3. Rota de Criar Senha
+                    // 5. Rota de Criar Senha (Público)
                     composable(route = "criar_senha") {
                         CriarSenhaScreen(
                             onFinalizar = {
@@ -65,26 +80,27 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    // 4. Rota da Home (Página Principal)
+                    // 6. Rota da Home
                     composable(route = "home") {
                         PaginaPrincipalKM(
                             onAbrirMenu = { navController.navigate("menu") },
-                            onIrParaLogin = { navController.navigate("login") }
-                        )
-                    }
-
-                    // 5. Rota do Menu Principal
-                    composable("menu") {
-                        MenuScreen(
-                            onVoltar = { navController.popBackStack() },
-                            onNavegar = { rota ->
-                                // Navega para a rota recebida do MenuScreen
-                                navController.navigate(rota)
+                            onIrParaLogin = {
+                                navController.navigate("login") {
+                                    popUpTo("home") { inclusive = true }
+                                }
                             }
                         )
                     }
 
-                    // 6. Rota de Categorias
+                    // 7. Rota do Menu
+                    composable("menu") {
+                        MenuScreen(
+                            onVoltar = { navController.popBackStack() },
+                            onNavegar = { rota -> navController.navigate(rota) }
+                        )
+                    }
+
+                    // 8. Rota de Categorias
                     composable("categorias") {
                         PaginaCategorias(
                             navController = navController,
@@ -92,7 +108,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    // 7. Rota de Cadastro de Produto
+                    // 9. Rota de Cadastro de Produto
                     composable("cadastro_produto") {
                         val vModel: CadastroProdutoViewModel = viewModel(
                             factory = object : ViewModelProvider.Factory {
@@ -101,18 +117,15 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         )
-                        CadastroProdutoScreen(
-                            navController = navController,
-                            viewModel = vModel
-                        )
+                        CadastroProdutoScreen(navController = navController, viewModel = vModel)
                     }
 
-                    // 8. Rota de Controle de Estoque (A que unificamos!)
+                    // 10. Rota de Controle de Estoque
                     composable("controle_estoque") {
                         PaginaControleEstoque()
                     }
 
-                    // 9. Rota da Lista de Clientes
+                    // 11. Rota da Lista de Clientes
                     composable(route = "lista_clientes") {
                         val listaViewModel: ListaClientesViewModel = viewModel(
                             factory = object : ViewModelProvider.Factory {
@@ -127,39 +140,25 @@ class MainActivity : ComponentActivity() {
                             onIrParaCadastro = { navController.navigate("cadastro_cliente") }
                         )
                     }
+
+                    // 12. Rota de Relatórios
                     composable("relatorios") {
-                        val context = LocalContext.current
-                        // Cria o ViewModel passando o Application necessário
                         val rViewModel: RelatoriosViewModel = viewModel(
                             factory = ViewModelProvider.AndroidViewModelFactory.getInstance(context.applicationContext as android.app.Application)
                         )
-
-                        PaginaRelatorio(
-                            onVoltar = { navController.popBackStack() },
-                            viewModel = rViewModel
-                        )
+                        PaginaRelatorio(onVoltar = { navController.popBackStack() }, viewModel = rViewModel)
                     }
+
+                    // 13. Rota de Vendas
                     composable("vendas") {
-                        // Criamos o ViewModel injetando o DAO do banco de dados
+                        // Aqui usamos o AndroidViewModelFactory para passar o application automaticamente
                         val vendaViewModel: RegistroVendaViewModel = viewModel(
-                            factory = object : ViewModelProvider.Factory {
-                                override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                                    // Aqui passamos o produtoDao para o ViewModel conseguir atualizar o estoque
-                                    return RegistroVendaViewModel(db.produtoDao()) as T
-                                }
-                            }
+                            factory = ViewModelProvider.AndroidViewModelFactory.getInstance(application)
                         )
-
-                        // Chamamos a tela passando o ViewModel configurado
-                        RegistroVendaScreen(
-                            navController = navController,
-                            vModel = vendaViewModel
-                        )
+                        RegistroVendaScreen(navController = navController, vModel = vendaViewModel)
                     }
                     }
-
-
-                } // Fim do NavHost
-            } // Fim do Theme
-        } // Fim do setContent
-    } // Fim do onCreate
+                }
+            }
+        }
+    }

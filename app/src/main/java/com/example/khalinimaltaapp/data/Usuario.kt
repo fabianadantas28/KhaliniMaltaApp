@@ -10,5 +10,8 @@ data class Usuario(
     val nome: String = "",
     val email: String = "",
     val senha: String = "",
-    val datahora: String = ""
+    val datahora: String = "",
+    val perfil: String = "FUNCIONARIO",  // "ADMIN" ou "FUNCIONARIO"
+    val trocarSenha: Boolean = true       // true = primeiro acesso
 )
+

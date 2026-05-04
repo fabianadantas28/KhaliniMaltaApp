@@ -13,22 +13,40 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.khalinimaltaapp.viewmodel.LoginViewModel
 
 @Composable
 fun LoginScreen(
+    navController: NavController, // Adicionado para permitir a navegação dinâmica
     onIrParaCadastro: () -> Unit,
     onIrParaPaginaInicial: () -> Unit,
-    // Conexão com a ViewModel
     viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val dourado = Color(0xFFC79E5E)
 
+    // --- BLOCO DO JOÃO: MONITORANDO O DESTINO ---
+
+    // 1. Caso precise trocar a senha (Primeiro Acesso)
+    LaunchedEffect(viewModel.irParaTrocaSenha) {
+        if (viewModel.irParaTrocaSenha) {
+            val id = viewModel.usuarioLogado?.id ?: 0
+            viewModel.limparCampos()
+            navController.navigate("troca_senha/$id")
+        }
+    }
+
+    // 2. Caso o login seja normal (Home)
+    LaunchedEffect(viewModel.irParaHome) {
+        if (viewModel.irParaHome) {
+            viewModel.limparCampos()
+            onIrParaPaginaInicial()
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
-        // FUNDO KHALINI
         Image(
             painter = painterResource(id = R.drawable.fundo_khalini),
             contentDescription = null,
@@ -45,17 +63,15 @@ fun LoginScreen(
         ) {
             Spacer(modifier = Modifier.height(160.dp))
 
-            // Campo de Usuário - Conectado à ViewModel
+            // Usuário
             OutlinedTextField(
                 value = viewModel.usuario,
                 onValueChange = { viewModel.usuario = it },
-                label = { Text("Usuário", color = dourado) },
+                label = { Text("Usuário/E-mail", color = dourado) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color.White,
                     unfocusedBorderColor = dourado,
-                    focusedLabelColor = Color.White,
-                    unfocusedLabelColor = dourado,
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White
                 ),
@@ -64,7 +80,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campo de Senha - Conectado à ViewModel
+            // Senha
             OutlinedTextField(
                 value = viewModel.senha,
                 onValueChange = { viewModel.senha = it },
@@ -74,15 +90,22 @@ fun LoginScreen(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color.White,
                     unfocusedBorderColor = dourado,
-                    focusedLabelColor = Color.White,
-                    unfocusedLabelColor = dourado,
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White
                 ),
                 shape = RoundedCornerShape(12.dp)
             )
 
-            // Link Esqueci Senha - Usando estado da ViewModel
+            // Mensagem de Erro (Caso o login falhe)
+            if (viewModel.loginErro) {
+                Text(
+                    text = "Usuário ou senha incorretos",
+                    color = Color.Red,
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+
             TextButton(
                 onClick = { viewModel.mostrarDialogo = true },
                 modifier = Modifier.align(Alignment.End)
@@ -92,9 +115,9 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Botão Entrar
+            // Botão Entrar - Agora chama a função de login da ViewModel
             Button(
-                onClick = onIrParaPaginaInicial,
+                onClick = { viewModel.fazerLogin() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
@@ -106,16 +129,10 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Seção de Cadastro
-            Text(
-                text = "Ainda não tem conta?",
-                color = dourado,
-                fontSize = 16.sp
-            )
+            Text(text = "Ainda não tem conta?", color = dourado, fontSize = 16.sp)
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Botão para navegar até o Cadastro
             OutlinedButton(
                 onClick = onIrParaCadastro,
                 modifier = Modifier
@@ -130,7 +147,6 @@ fun LoginScreen(
         }
     }
 
-    // Diálogo controlado pela ViewModel
     if (viewModel.mostrarDialogo) {
         AlertDialog(
             onDismissRequest = { viewModel.mostrarDialogo = false },
@@ -145,13 +161,4 @@ fun LoginScreen(
             titleContentColor = dourado
         )
     }
-}
-
-@Preview(showSystemUi = true)
-@Composable
-fun PreviewLogin() {
-    LoginScreen(
-        onIrParaCadastro = {},
-        onIrParaPaginaInicial = {}
-    )
 }

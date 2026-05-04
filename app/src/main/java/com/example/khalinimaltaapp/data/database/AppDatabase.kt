@@ -10,11 +10,13 @@ import com.example.khalinimaltaapp.data.dao.UsuarioDao
 import com.example.khalinimaltaapp.data.Cliente
 import com.example.khalinimaltaapp.data.Produto // Garanta que este import existe
 import com.example.khalinimaltaapp.data.dao.ProdutoDao
+import com.example.khalinimaltaapp.data.Venda //
+import com.example.khalinimaltaapp.data.dao.VendaDao
 
 // ADICIONEI O Produto::class AQUI ABAIXO:
 @Database(
-    entities = [Usuario::class, Cliente::class, Produto::class],
-    version = 3, //Mantemos a versão 3 porque houve mudança de estrutura
+    entities = [Usuario::class, Cliente::class, Produto::class, Venda::class],
+    version = 5,  // era 4, agora é 5
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -22,6 +24,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun usuarioDao(): UsuarioDao
     abstract fun clienteDao(): ClienteDao
     abstract fun produtoDao(): ProdutoDao
+    abstract fun vendaDao(): VendaDao
 
     companion object {
         @Volatile
