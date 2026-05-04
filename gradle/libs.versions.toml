@@ -1,8 +1,8 @@
 [versions]
 # Recomendo baixar o AGP para 8.7.2 se os bugs persistirem,
 # mas vamos tentar manter o seu 9.1.1 primeiro.
-agp = "8.13.2"
-kotlin = "2.0.21" # Versão estável do Kotlin 2.0
+agp = "9.1.1"
+kotlin = "2.2.10" # Versão estável do Kotlin 2.0
 coreKtx = "1.15.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
@@ -14,7 +14,7 @@ room = "2.6.1"
 
 # A REGRA DE OURO: Versão do Kotlin + Release do KSP
 # Para Kotlin 2.0.21, use KSP 2.0.21-1.0.27
-ksp = "2.0.21-1.0.27"
+ksp = "2.3.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
