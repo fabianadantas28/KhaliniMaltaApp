@@ -24,16 +24,18 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    // Use esta forma simples que não dá erro de "Unresolved reference"
     kotlinOptions {
         jvmTarget = "17"
-        // ESTA LINHA ABAIXO É A CURA PARA O ERRO "SIGNATURE V"
-        freeCompilerArgs += "-Xjvm-default=all"
+        // Use exatamente assim, com o 'listOf'
+        freeCompilerArgs = freeCompilerArgs + listOf("-Xjvm-default=all")
     }
 
     buildFeatures {
         compose = true
     }
 }
+
 
 kotlin {
     jvmToolchain(17)
@@ -53,11 +55,16 @@ dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
 
     // Room
-    val room_version = "2.6.1"
-    implementation("androidx.room:room-runtime:$room_version")
-    implementation("androidx.room:room-ktx:$room_version")
-    ksp("androidx.room:room-compiler:$room_version")
+    // Mude de 2.6.1 para 2.7.0-alpha01 ou alpha02
+    dependencies {
+        // Mude a versão para esta aqui:
+        val room_version = "2.7.0-alpha01"
 
+        implementation("androidx.room:room-runtime:$room_version")
+        implementation("androidx.room:room-ktx:$room_version")
+        ksp("androidx.room:room-compiler:$room_version")
+
+    }
 
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.compose.material.icons.extended)

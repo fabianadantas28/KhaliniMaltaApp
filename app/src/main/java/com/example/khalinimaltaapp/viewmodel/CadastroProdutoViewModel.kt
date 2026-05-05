@@ -7,11 +7,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.khalinimaltaapp.data.Produto
 import com.example.khalinimaltaapp.data.dao.ProdutoDao
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 class CadastroProdutoViewModel(private val produtoDao: ProdutoDao) : ViewModel() {
 
-    // Estados que a Screen vai observar
+    // --- 1. ESTADOS PARA O FORMULÁRIO DE CADASTRO (O QUE VOCÊ DIGITA) ---
     var nome by mutableStateOf("")
     var marca by mutableStateOf("")
     var material by mutableStateOf("")
@@ -21,8 +22,8 @@ class CadastroProdutoViewModel(private val produtoDao: ProdutoDao) : ViewModel()
     var categoria by mutableStateOf("")
     var estoque by mutableStateOf("")
 
+    // --- 2. FUNÇÃO PARA SALVAR NOVO PRODUTO (ADMINISTRAÇÃO) ---
     fun salvarProduto(onSucesso: () -> Unit, onError: (String) -> Unit) {
-        // Validação básica
         if (nome.isBlank() || categoria.isBlank() || preco.isBlank()) {
             onError("Preencha Nome, Categoria e Preço!")
             return
@@ -39,7 +40,7 @@ class CadastroProdutoViewModel(private val produtoDao: ProdutoDao) : ViewModel()
                     categoria = categoria,
                     qtdeEstoque = estoque.toIntOrNull() ?: 0,
                     preco = preco.replace(",", ".").toDoubleOrNull() ?: 0.0,
-                    imagemUrl = "" // Campo obrigatório na Entity
+                    imagemUrl = ""
                 )
 
                 produtoDao.inserir(novoProduto)
@@ -51,6 +52,28 @@ class CadastroProdutoViewModel(private val produtoDao: ProdutoDao) : ViewModel()
         }
     }
 
+    // --- 3. FUNÇÃO PARA A VITRINE (BUSCAR PRODUTOS PARA O CLIENTE) ---
+    // Esta função "conversa" com o DAO para trazer a lista filtrada
+    fun getProdutosPorCategoria(categoriaNome: String): Flow<List<Produto>> {
+        return produtoDao.buscarPorCategoria(categoriaNome)
+    }
+
+    // --- 4. FUNÇÃO DE VENDA (DAR BAIXA NO ESTOQUE) ---
+    // Diminui 1 unidade do estoque no banco de dados
+    fun venderProduto(produto: Produto) {
+        if (produto.qtdeEstoque > 0) {
+            viewModelScope.launch {
+                // Criamos uma cópia do produto com o novo valor de estoque
+                val produtoAtualizado = produto.copy(
+                    qtdeEstoque = produto.qtdeEstoque - 1
+                )
+                // Avisamos o DAO para atualizar no banco
+                produtoDao.atualizar(produtoAtualizado)
+            }
+        }
+    }
+
+    // Limpa os campos após o cadastro com sucesso
     private fun limparCampos() {
         nome = ""; marca = ""; material = ""; codigo = ""
         preco = ""; descricao = ""; categoria = ""; estoque = ""

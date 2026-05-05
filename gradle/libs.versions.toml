@@ -1,8 +1,8 @@
 [versions]
 # Recomendado para AGP 9.1.1 e estabilidade total
-agp = "8.13.2"
-kotlin = "2.0.21"
-ksp = "2.0.21-1.0.26"
+agp = "8.13.2" # Ou a que seu Android Studio sugerir
+kotlin = "2.0.0" # Versão estável do Kotlin 2
+ksp = "2.0.0-1.0.21" # O KSP PRECISA ser idêntico à versão do Kotlin
 
 coreKtx = "1.15.0"
 junit = "4.13.2"
@@ -11,7 +11,7 @@ espressoCore = "3.6.1"
 lifecycleRuntimeKtx = "2.8.7"
 activityCompose = "1.9.3"
 composeBom = "2024.10.01"
-room = "2.6.1"
+room = "2.7.0-alpha01"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }

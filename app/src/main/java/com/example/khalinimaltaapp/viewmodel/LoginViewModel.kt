@@ -21,11 +21,11 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     var mostrarDialogo by mutableStateOf(false)
     var loginErro by mutableStateOf(false)
 
-    // Controle de navegação após login
+    // CONTROLE DE ACESSO
     var irParaHome by mutableStateOf(false)
     var irParaTrocaSenha by mutableStateOf(false)
+    var tipoUsuarioLogado by mutableStateOf("") // NOVO: Guarda se é "ADMIN" ou "CLIENTE"
 
-    // Guarda o usuário logado para usar na TrocaSenhaScreen
     var usuarioLogado: Usuario? = null
 
     fun fazerLogin() {
@@ -35,39 +35,23 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         viewModelScope.launch(Dispatchers.IO) {
+            val usuarioDigitado = usuario.trim().lowercase()
 
-            // --- BLOCO DE EMERGÊNCIA PARA PRIMEIRO ACESSO ---
-            // Se você digitar admin / admin e o banco estiver vazio, ele te deixa entrar
-            if (usuario.trim().lowercase() == "admin" && senha == "admin") {
-                val adminNoBanco = usuarioDao.realizarLogin("admin", "admin")
-
-                if (adminNoBanco == null) {
-                    // Se não existir, criamos o administrador agora mesmo
-                    val novoAdmin = Usuario(
-                        nome = "Administrador Master",
-                        email = "admin",
-                        senha = "admin",
-                        perfil = "ADMIN",
-                        trocarSenha = false // O admin mestre não precisa trocar
-                    )
-                    usuarioDao.cadastrarUsuario(novoAdmin)
-                    usuarioLogado = novoAdmin
-                } else {
-                    usuarioLogado = adminNoBanco
-                }
-
+            // 1. LOGIN ADMIN (Bloco de Emergência)
+            if (usuarioDigitado == "admin" && senha == "admin") {
+                tipoUsuarioLogado = "ADMIN"
                 irParaHome = true
                 loginErro = false
                 return@launch
             }
-            // --- FIM DO BLOCO DE EMERGÊNCIA ---
 
-            // Tenta login como funcionário/admin cadastrado
-            val func = usuarioDao.realizarLogin(usuario.trim().lowercase(), senha)
+            // 2. LOGIN FUNCIONÁRIO/ADMIN CADASTRADO
+            val func = usuarioDao.realizarLogin(usuarioDigitado, senha)
             if (func != null) {
                 usuarioLogado = func
+                tipoUsuarioLogado = "ADMIN" // Marca como Admin
                 if (func.trocarSenha) {
-                    irParaTrocaSenha = true  // primeiro acesso → obriga troca de senha
+                    irParaTrocaSenha = true
                 } else {
                     irParaHome = true
                 }
@@ -75,9 +59,10 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                 return@launch
             }
 
-            // Tenta login como cliente
-            val cliente = clienteDao.buscarPorEmailESenha(usuario.trim().lowercase(), senha)
+            // 3. LOGIN CLIENTE
+            val cliente = clienteDao.buscarPorEmailESenha(usuarioDigitado, senha)
             if (cliente != null) {
+                tipoUsuarioLogado = "CLIENTE" // Marca como Cliente
                 irParaHome = true
                 loginErro = false
             } else {
@@ -92,6 +77,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         loginErro = false
         irParaHome = false
         irParaTrocaSenha = false
+        tipoUsuarioLogado = ""
         usuarioLogado = null
     }
 }

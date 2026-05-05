@@ -27,9 +27,9 @@ fun LoginScreen(
 ) {
     val dourado = Color(0xFFC79E5E)
 
-    // --- BLOCO DO JOÃO: MONITORANDO O DESTINO ---
+    // --- BLOCO: MONITORANDO O DESTINO ---
 
-    // 1. Caso precise trocar a senha (Primeiro Acesso)
+    // 1. Caso precise trocar a senha
     LaunchedEffect(viewModel.irParaTrocaSenha) {
         if (viewModel.irParaTrocaSenha) {
             val id = viewModel.usuarioLogado?.id ?: 0
@@ -38,13 +38,22 @@ fun LoginScreen(
         }
     }
 
-    // 2. Caso o login seja normal (Home)
+    // 2. Direcionamento Inteligente (AQUI ESTÁ A CHAVE!)
     LaunchedEffect(viewModel.irParaHome) {
         if (viewModel.irParaHome) {
+            if (viewModel.tipoUsuarioLogado == "ADMIN") {
+                // Admin vai para a página de gestão
+                onIrParaPaginaInicial()
+            } else {
+                // Cliente vai direto para escolher produtos
+                navController.navigate("pagina_categorias") {
+                    popUpTo("login") { inclusive = true }
+                }
+            }
             viewModel.limparCampos()
-            onIrParaPaginaInicial()
         }
     }
+
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(

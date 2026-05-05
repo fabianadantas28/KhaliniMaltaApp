@@ -1,21 +1,24 @@
 package com.example.khalinimaltaapp.data.dao
 
-import androidx.room.* // Certifique-se de importar o Room por completo
+import androidx.room.*
 import com.example.khalinimaltaapp.data.Produto
 import kotlinx.coroutines.flow.Flow
-import androidx.room.Update
+
 
 @Dao
 interface ProdutoDao {
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun inserir(produto: Produto) // Remova o ": Unit", o Kotlin já entende isso
+    suspend fun inserir(produto: Produto)
 
     @Update
-    suspend fun updateProduto(produto: Produto) // Essencial para o Registro de Vendas
+    suspend fun atualizar(produto: Produto)
+
+    // ADICIONE ESTA LINHA AQUI:
+    @Query("SELECT * FROM produtos WHERE nomeProduto LIKE '%' || :nome || '%'")
+    fun buscarPorNome(nome: String): Flow<List<Produto>>
 
     @Query("SELECT * FROM produtos WHERE categoria = :categoriaDigitada")
-    fun getProdutosPorCategoria(categoriaDigitada: String): Flow<List<Produto>>
+    fun buscarPorCategoria(categoriaDigitada: String): Flow<List<Produto>>
 
     @Query("SELECT * FROM produtos")
     fun getAllProdutos(): Flow<List<Produto>>

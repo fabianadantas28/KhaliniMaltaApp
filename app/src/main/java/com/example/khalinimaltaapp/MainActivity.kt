@@ -7,14 +7,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType // ADICIONADO
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument // ADICIONADO: Essencial para os argumentos de venda
 import com.example.khalinimaltaapp.data.database.AppDatabase
 import com.example.khalinimaltaapp.ui.theme.KhaliniMaltaAppTheme
 import com.example.khalinimaltaapp.viewmodel.*
 import com.example.khalinimaltaapp.ui.relatorio.PaginaRelatorio
-// Verifique se os caminhos abaixo estão corretos no seu projeto
 import com.example.khalinimaltaapp.ui.estoque.PaginaControleEstoque
 
 class MainActivity : ComponentActivity() {
@@ -26,12 +27,22 @@ class MainActivity : ComponentActivity() {
                 val context = LocalContext.current
                 val db = AppDatabase.getDatabase(context)
 
-                // ViewModel compartilhado para o fluxo de cadastro de cliente
                 val sharedViewModel: CadastroClienteViewModel = viewModel()
 
-                NavHost(navController = navController, startDestination = "login") {
+                NavHost(navController = navController, startDestination = "splash") {
 
-                    // 1. ROTA DE LOGIN (Atualizada com NavController para a lógica do João)
+                    // 0. SPLASH SCREEN
+                    composable(route = "splash") {
+                        SplashScreen(
+                            onTimeout = {
+                                navController.navigate("login") {
+                                    popUpTo("splash") { inclusive = true }
+                                }
+                            }
+                        )
+                    }
+
+                    // 1. LOGIN
                     composable(route = "login") {
                         LoginScreen(
                             navController = navController,
@@ -40,7 +51,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    // 2. ROTA DE TROCA DE SENHA (Código do João - Primeiro Acesso)
+                    // 2. TROCA DE SENHA
                     composable("troca_senha/{usuarioId}") { backStackEntry ->
                         val usuarioId = backStackEntry.arguments?.getString("usuarioId")?.toInt() ?: 0
                         TrocaSenhaScreen(
@@ -53,14 +64,10 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    // 3. ROTA DE CADASTRO DE FUNCIONÁRIO (Código do João - Acesso Admin)
                     composable("cadastro_usuario") {
-                        CadastroUsuarioScreen(
-                            onVoltar = { navController.popBackStack() }
-                        )
+                        CadastroUsuarioScreen(onVoltar = { navController.popBackStack() })
                     }
 
-                    // 4. Rota de Cadastro de Cliente (Público)
                     composable(route = "cadastro_cliente") {
                         CadastroClienteScreen(
                             onContinuar = { navController.navigate("criar_senha") },
@@ -68,7 +75,6 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    // 5. Rota de Criar Senha (Público)
                     composable(route = "criar_senha") {
                         CriarSenhaScreen(
                             onFinalizar = {
@@ -80,7 +86,6 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    // 6. Rota da Home
                     composable(route = "home") {
                         PaginaPrincipalKM(
                             onAbrirMenu = { navController.navigate("menu") },
@@ -92,23 +97,21 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    // 7. Rota do Menu
                     composable("menu") {
-                        MenuScreen(
+                        MenuScreen(onNavegar = { rota -> navController.navigate(rota) })
+                    }
+
+                    composable(route = "pagina_categorias") {
+                        PaginaCategoriaScreen(navController = navController)
+                    }
+
+                    composable("menu_administracao") {
+                        MenuAdministracaoScreen(
                             onVoltar = { navController.popBackStack() },
                             onNavegar = { rota -> navController.navigate(rota) }
                         )
                     }
 
-                    // 8. Rota de Categorias
-                    composable("categorias") {
-                        PaginaCategorias(
-                            navController = navController,
-                            onIrParaCadastroProduto = { navController.navigate("cadastro_produto") }
-                        )
-                    }
-
-                    // 9. Rota de Cadastro de Produto
                     composable("cadastro_produto") {
                         val vModel: CadastroProdutoViewModel = viewModel(
                             factory = object : ViewModelProvider.Factory {
@@ -120,13 +123,27 @@ class MainActivity : ComponentActivity() {
                         CadastroProdutoScreen(navController = navController, viewModel = vModel)
                     }
 
-                    // 10. Rota de Controle de Estoque
+                    composable("lista_produtos/{categoriaNome}") { backStackEntry ->
+                        val categoria = backStackEntry.arguments?.getString("categoriaNome") ?: ""
+                        val vModel: CadastroProdutoViewModel = viewModel(
+                            factory = object : ViewModelProvider.Factory {
+                                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                    return CadastroProdutoViewModel(db.produtoDao()) as T
+                                }
+                            }
+                        )
+                        ListaProdutosScreen(
+                            navController = navController,
+                            categoriaSelecionada = categoria,
+                            viewModel = vModel
+                        )
+                    }
+
                     composable("controle_estoque") {
                         PaginaControleEstoque()
                     }
 
-                    // 11. Rota da Lista de Clientes
-                    composable(route = "lista_clientes") {
+                    composable(route = "lista_cliente") {
                         val listaViewModel: ListaClientesViewModel = viewModel(
                             factory = object : ViewModelProvider.Factory {
                                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -141,7 +158,6 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    // 12. Rota de Relatórios
                     composable("relatorios") {
                         val rViewModel: RelatoriosViewModel = viewModel(
                             factory = ViewModelProvider.AndroidViewModelFactory.getInstance(context.applicationContext as android.app.Application)
@@ -149,16 +165,40 @@ class MainActivity : ComponentActivity() {
                         PaginaRelatorio(onVoltar = { navController.popBackStack() }, viewModel = rViewModel)
                     }
 
-                    // 13. Rota de Vendas
-                    composable("vendas") {
-                        // Aqui usamos o AndroidViewModelFactory para passar o application automaticamente
-                        val vendaViewModel: RegistroVendaViewModel = viewModel(
-                            factory = ViewModelProvider.AndroidViewModelFactory.getInstance(application)
+                    // ROTA DE VENDAS ATUALIZADA
+                    composable(
+                        route = "vendas?produtoNome={produtoNome}&preco={preco}",
+                        arguments = listOf(
+                            navArgument("produtoNome") {
+                                type = NavType.StringType
+                                defaultValue = ""
+                            },
+                            navArgument("preco") {
+                                type = NavType.StringType
+                                defaultValue = ""
+                            }
                         )
-                        RegistroVendaScreen(navController = navController, vModel = vendaViewModel)
-                    }
+                    ) { backStackEntry ->
+                        val produtoNome = backStackEntry.arguments?.getString("produtoNome") ?: ""
+                        val preco = backStackEntry.arguments?.getString("preco") ?: ""
+
+                        val vendaViewModel: RegistroVendaViewModel = viewModel(
+                            factory = object : ViewModelProvider.Factory {
+                                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                    return RegistroVendaViewModel(db.produtoDao(), db.vendaDao()) as T
+                                }
+                            }
+                        )
+
+                        RegistroVendaScreen(
+                            navController = navController,
+                            vModel = vendaViewModel,
+                            produtoNome = produtoNome,
+                            produtoPreco = preco
+                        )
                     }
                 }
             }
         }
     }
+}

@@ -35,7 +35,7 @@ fun CadastroUsuarioScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
-            painter = painterResource(id = R.drawable.fundo_preto),
+            painter = painterResource(id = R.drawable.fundo_logomarca),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.FillBounds

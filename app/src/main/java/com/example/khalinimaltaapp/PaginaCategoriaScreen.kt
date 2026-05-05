@@ -20,24 +20,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
-// Mantendo suas cores originais
-val CorOuroCaixinha = Color(0xFFC39953)
 val CorOuroBorda = Color(0xFFC79E5E)
+val CorOuroCaixinha = Color(0xFFC39953)
 
-data class CategoriaItem(
-    val nome: String,
-    val imagemRes: Int,
-    val rotaBase: String // Rota base para a lista
-)
+data class CategoriaItem(val nome: String, val imagemRes: Int)
 
 @Composable
-fun PaginaCategorias(
-    navController: NavController,
-    onIrParaCadastroProduto: () -> Unit // Nova função para o botão
-) {
+fun PaginaCategoriaScreen(navController: NavController) {
     Box(modifier = Modifier.fillMaxSize()) {
-
-        // FUNDO
         Image(
             painter = painterResource(id = R.drawable.fundo_logomarca),
             contentDescription = null,
@@ -46,129 +36,67 @@ fun PaginaCategorias(
         )
 
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 40.dp),
+            modifier = Modifier.fillMaxSize().padding(horizontal = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(150.dp))
-
-            Text(
-                text = "CATEGORIAS",
-                color = CorOuroBorda,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 2.sp
-            )
-
+            Text("CATEGORIAS", color = CorOuroBorda, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(10.dp))
 
-            // GRID DE CATEGORIAS
             Box(modifier = Modifier.weight(1f)) {
-                CategoriaGrid(navController)
-            }
-
-            // --- NOVO BOTÃO: CADASTRAR PRODUTO ---
-            Button(
-                onClick = onIrParaCadastroProduto,
-                modifier = Modifier
-                    .fillMaxWidth(0.85f)
-                    .height(45.dp),
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = CorOuroBorda)
-            ) {
-                Text(
-                    "CADASTRAR NOVO PRODUTO",
-                    color = Color.Black,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.ExtraBold
+                val categorias = listOf(
+                    CategoriaItem("Anéis", R.drawable.anel),
+                    CategoriaItem("Colares", R.drawable.colar),
+                    CategoriaItem("Brincos", R.drawable.brinco),
+                    CategoriaItem("Pulseiras", R.drawable.pulseira),
+                    CategoriaItem("Tornozeleiras", R.drawable.tornozeleira),
+                    CategoriaItem("Acessórios", R.drawable.acessorios)
                 )
+
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(categorias) { categoria ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .aspectRatio(1.3f)
+                                .clickable {
+                                    // Navega enviando o nome da categoria como parâmetro
+                                    navController.navigate("lista_produtos/${categoria.nome}")
+                                },
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(0.5.dp, CorOuroBorda)
+                        ) {
+                            Box(modifier = Modifier.fillMaxSize().background(CorOuroCaixinha), contentAlignment = Alignment.Center) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Image(
+                                        painter = painterResource(id = categoria.imagemRes),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(38.dp),
+                                        colorFilter = ColorFilter.tint(Color.Black)
+                                    )
+                                    Text(categoria.nome, color = Color.Black, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // BOTÃO VOLTAR
             OutlinedButton(
                 onClick = { navController.popBackStack() },
-                modifier = Modifier
-                    .fillMaxWidth(0.85f)
-                    .height(42.dp),
+                modifier = Modifier.fillMaxWidth(0.85f).height(42.dp),
                 border = BorderStroke(1.dp, CorOuroBorda),
                 shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = Color.Black.copy(alpha = 0.8f)
-                )
+                colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.Black.copy(alpha = 0.8f))
             ) {
-                Text(
-                    "VOLTAR AO MENU",
-                    color = CorOuroBorda,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Text("VOLTAR", color = CorOuroBorda, fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
-
             Spacer(modifier = Modifier.height(100.dp))
-        }
-    }
-}
-
-@Composable
-fun CategoriaGrid(navController: NavController) {
-    // Definindo as categorias que levarão para a lista_produtos/{nome}
-    val categorias = listOf(
-        CategoriaItem("Anéis", R.drawable.anel, "lista_produtos/Anéis"),
-        CategoriaItem("Colares", R.drawable.colar, "lista_produtos/Colares"),
-        CategoriaItem("Brincos", R.drawable.brinco, "lista_produtos/Brincos"),
-        CategoriaItem("Pulseiras", R.drawable.pulseira, "lista_produtos/Pulseiras"),
-        CategoriaItem("Tornozeleiras", R.drawable.tornozeleira, "lista_produtos/Tornozeleiras"),
-        CategoriaItem("Acessórios", R.drawable.acessorios, "lista_produtos/Acessórios")
-    )
-
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        items(categorias) { categoria ->
-            CategoriaCard(categoria, navController)
-        }
-    }
-}
-
-@Composable
-fun CategoriaCard(item: CategoriaItem, navController: NavController) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .aspectRatio(1.3f)
-            .clickable { navController.navigate(item.rotaBase) },
-        shape = RoundedCornerShape(10.dp),
-        border = BorderStroke(0.5.dp, CorOuroBorda)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(CorOuroCaixinha),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Image(
-                    painter = painterResource(id = item.imagemRes),
-                    contentDescription = item.nome,
-                    modifier = Modifier.size(38.dp),
-                    colorFilter = ColorFilter.tint(Color.Black)
-                )
-
-                Spacer(modifier = Modifier.height(2.dp))
-
-                Text(
-                    text = item.nome,
-                    color = Color.Black,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
         }
     }
 }
