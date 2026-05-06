@@ -169,7 +169,8 @@ class MainActivity : ComponentActivity() {
 
                     // ROTA DE VENDAS
                     composable(
-                        route = "vendas?produtoNome={produtoNome}&preco={preco}",
+                        // Adicionamos &quantidade={quantidade} no final da rota
+                        route = "vendas?produtoNome={produtoNome}&preco={preco}&quantidade={quantidade}",
                         arguments = listOf(
                             navArgument("produtoNome") {
                                 type = NavType.StringType
@@ -178,11 +179,18 @@ class MainActivity : ComponentActivity() {
                             navArgument("preco") {
                                 type = NavType.StringType
                                 defaultValue = ""
+                            },
+                            // NOVO ARGUMENTO: Quantidade (Tipo Inteiro)
+                            navArgument("quantidade") {
+                                type = NavType.IntType
+                                defaultValue = 1
                             }
                         )
                     ) { backStackEntry ->
                         val produtoNome = backStackEntry.arguments?.getString("produtoNome") ?: ""
                         val preco = backStackEntry.arguments?.getString("preco") ?: ""
+                        // PEGAMOS A QUANTIDADE AQUI:
+                        val quantidade = backStackEntry.arguments?.getInt("quantidade") ?: 1
 
                         val vendaViewModel: RegistroVendaViewModel = viewModel(
                             factory = object : ViewModelProvider.Factory {
@@ -196,7 +204,8 @@ class MainActivity : ComponentActivity() {
                             navController = navController,
                             vModel = vendaViewModel,
                             produtoNome = produtoNome,
-                            produtoPreco = preco
+                            produtoPreco = preco,
+                            quantidade = quantidade // PASSAMOS PARA A TELA
                         )
                     }
 

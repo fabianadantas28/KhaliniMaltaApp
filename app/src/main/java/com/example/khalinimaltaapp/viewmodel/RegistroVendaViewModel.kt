@@ -13,64 +13,52 @@ class RegistroVendaViewModel(
     private val vendaDao: VendaDao
 ) : ViewModel() {
 
-    // 1. Lista de produtos encontrados na busca
-    private val _produtosEncontrados = MutableStateFlow<List<Produto>>(emptyList())
-    val produtosEncontrados = _produtosEncontrados.asStateFlow()
-
-    // 2. Estado para avisar a tela que a venda deu certo
     private val _vendaConfirmada = MutableStateFlow(false)
     val vendaConfirmada = _vendaConfirmada.asStateFlow()
 
-    // 3. Estado para mensagens de erro
     private val _erroVenda = MutableStateFlow("")
     val erroVenda = _erroVenda.asStateFlow()
 
-    // Função de busca que a sua Screen chama no 'onValueChange'
-    // Dentro do seu RegistroVendaViewModel
-    fun buscarProduto(query: String) {
-        viewModelScope.launch {
-            // Agora o 'buscarPorNome' vai ser reconhecido!
-            produtoDao.buscarProdutosPorNome(query).collect { lista ->
-                _produtosEncontrados.value = lista
-            }
-        }
-    }
-
-    fun confirmarVenda(produto: Produto, quantidade: Int) {
-        viewModelScope.launch {
-            if (produto.qtdeEstoque >= quantidade) {
-                // Usando 'atualizar' que é o nome real no seu DAO
-                produtoDao.atualizar(produto.copy(qtdeEstoque = produto.qtdeEstoque - quantidade))
-                _vendaConfirmada.value = true
-            }
-        }
-    }
-
-    // Função que o botão "CONFIRMAR VENDA" da sua tela chama
+    // AJUSTE: Função que a RegistroVendaScreen vai chamar
     fun confirmarVenda(
-        produto: Produto,
+        nomeProduto: String,
         quantidade: Int,
-        nomeCliente: String,
-        telefoneCliente: String,
-        formaPagamento: String
+        valorTotal: Double,
+        formaPagamento: String,
+        onSucesso: () -> Unit // Callback para avisar a tela
     ) {
         viewModelScope.launch {
             try {
-                // Valida estoque usando o nome correto: qtdeEstoque
-                if (produto.qtdeEstoque < quantidade) {
-                    _erroVenda.value = "Estoque insuficiente!"
+                // 1. Primeiro, buscamos o produto real no banco pelo nome
+                // Usamos 'first()' para pegar a lista atual do Flow e extrair o primeiro item
+                val listaProdutos = produtoDao.buscarProdutosPorNome(nomeProduto).first()
+                val produtoOriginal = listaProdutos.firstOrNull()
+
+                if (produtoOriginal == null) {
+                    _erroVenda.value = "Produto não encontrado!"
                     return@launch
                 }
 
-                // Atualiza o estoque no banco
-                val produtoAtualizado = produto.copy(qtdeEstoque = produto.qtdeEstoque - quantidade)
-                produtoDao.atualizar(produtoAtualizado)
+                // 2. Validamos o estoque
+                if (produtoOriginal.qtdeEstoque < quantidade) {
+                    _erroVenda.value = "Estoque insuficiente! Temos apenas ${produtoOriginal.qtdeEstoque}."
+                    return@launch
+                }
 
-                // Se chegou aqui, deu certo
+                // 3. Atualizamos o estoque no banco usando a função que criamos ontem
+                val novaQuantidade = produtoOriginal.qtdeEstoque - quantidade
+                produtoDao.atualizarEstoque(produtoOriginal.id, novaQuantidade)
+
+                // 4. (Opcional) Aqui você poderia salvar na tabela de Vendas se quiser
+                // vendaDao.inserir(Venda(...))
+
+                // 5. Sucesso!
                 _vendaConfirmada.value = true
                 _erroVenda.value = ""
+                onSucesso() // Executa a navegação de volta ou para tela de sucesso
+
             } catch (e: Exception) {
-                _erroVenda.value = "Erro: ${e.message}"
+                _erroVenda.value = "Erro ao processar venda: ${e.message}"
             }
         }
     }
