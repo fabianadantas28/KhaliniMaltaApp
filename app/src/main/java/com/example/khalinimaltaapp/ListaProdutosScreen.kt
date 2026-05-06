@@ -41,9 +41,8 @@ fun ListaProdutosScreen(
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
-                // Aumentamos a altura da barra para o nome "ANÉIS" descer
                 Column {
-                    Spacer(modifier = Modifier.height(100.dp)) // ESPAÇO PARA O NOME DESCER
+                    Spacer(modifier = Modifier.height(100.dp))
                     CenterAlignedTopAppBar(
                         title = {
                             Text(
@@ -57,9 +56,7 @@ fun ListaProdutosScreen(
                                 Icon(Icons.Default.ArrowBack, contentDescription = "Voltar", tint = CorOuroBorda)
                             }
                         },
-                        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                            containerColor = Color.Transparent // Deixamos transparente para não cobrir a marca
-                        )
+                        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
                     )
                 }
             }
@@ -70,18 +67,16 @@ fun ListaProdutosScreen(
                 }
             } else {
                 LazyColumn(
-                    modifier = Modifier
-                        .padding(paddingValues)
-                        .padding(horizontal = 16.dp),
+                    modifier = Modifier.padding(paddingValues).padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    // ESPAÇO PARA OS PRODUTOS FICAREM ABAIXO DA LOGOMARCA
-                    item {
-                        Spacer(modifier = Modifier.height(100.dp))
-                    }
+                    item { Spacer(modifier = Modifier.height(100.dp)) }
 
                     items(produtos) { produto ->
                         if (produto.qtdeEstoque > 0) {
+                            // ESTADO PARA CONTROLAR A QUANTIDADE DESTE PRODUTO ESPECÍFICO
+                            var quantidadeSelecionada by remember { mutableIntStateOf(1) }
+
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(10.dp),
@@ -93,12 +88,38 @@ fun ListaProdutosScreen(
                                         Text(produto.nomeProduto, color = Color.White, fontWeight = FontWeight.Bold)
                                         Text("R$ ${String.format("%.2f", produto.preco)}", color = CorOuroBorda)
                                         Text("Estoque: ${produto.qtdeEstoque}", color = Color.LightGray, fontSize = 12.sp)
+
+                                        // --- SELETOR DE QUANTIDADE ---
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.padding(top = 8.dp)
+                                        ) {
+                                            IconButton(
+                                                onClick = { if (quantidadeSelecionada > 1) quantidadeSelecionada-- },
+                                                modifier = Modifier.size(30.dp)
+                                            ) {
+                                                Text("-", color = CorOuroBorda, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                                            }
+
+                                            Text(
+                                                text = quantidadeSelecionada.toString(),
+                                                color = Color.White,
+                                                modifier = Modifier.padding(horizontal = 8.dp)
+                                            )
+
+                                            IconButton(
+                                                onClick = { if (quantidadeSelecionada < produto.qtdeEstoque) quantidadeSelecionada++ },
+                                                modifier = Modifier.size(30.dp)
+                                            ) {
+                                                Text("+", color = CorOuroBorda, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                                            }
+                                        }
                                     }
-                                    // No botão COMPRAR da sua ListaProdutosScreen
+
                                     Button(
                                         onClick = {
-                                            // Navega para a tela de vendas passando o nome do produto e o preço
-                                            navController.navigate("vendas?produtoNome=${produto.nomeProduto}&preco=${produto.preco}")
+                                            // AGORA ENVIAMOS TAMBÉM A QUANTIDADE NA ROTA
+                                            navController.navigate("vendas?produtoNome=${produto.nomeProduto}&preco=${produto.preco}&quantidade=${quantidadeSelecionada}")
                                         },
                                         colors = ButtonDefaults.buttonColors(containerColor = CorOuroBorda)
                                     ) {

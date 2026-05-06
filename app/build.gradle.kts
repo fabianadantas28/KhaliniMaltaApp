@@ -19,26 +19,17 @@ android {
     }
 
     compileOptions {
-        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    // Use esta forma simples que não dá erro de "Unresolved reference"
     kotlinOptions {
         jvmTarget = "17"
-        // Use exatamente assim, com o 'listOf'
-        freeCompilerArgs = freeCompilerArgs + listOf("-Xjvm-default=all")
     }
 
     buildFeatures {
         compose = true
     }
-}
-
-
-kotlin {
-    jvmToolchain(17)
 }
 
 dependencies {
@@ -51,29 +42,14 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
-
-    // Room
-    // Mude de 2.6.1 para 2.7.0-alpha01 ou alpha02
-    dependencies {
-        // Mude a versão para esta aqui:
-        val room_version = "2.7.0-alpha01"
-
-        implementation("androidx.room:room-runtime:$room_version")
-        implementation("androidx.room:room-ktx:$room_version")
-        ksp("androidx.room:room-compiler:$room_version")
-
-    }
-
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.compose.material.icons.extended)
 
-    // ViewModel
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
-}
+    // Room - Usando as referências corretas do libs.versions.toml
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 
-ksp {
-    arg("room.incremental", "true")
-    arg("room.expandProjection", "true")
+    // ViewModel
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
 }

@@ -60,10 +60,10 @@ fun MenuAdministracaoScreen(
 
             Box(modifier = Modifier.weight(1f)) {
                 val itensAdmin = listOf(
-                    // AJUSTADO: Agora aponta para lista_cliente em vez de cadastro
                     MenuItemData("Clientes", Icons.Default.Person, "lista_cliente"),
                     MenuItemData("Cadastrar Produto", Icons.Default.Add, "cadastro_produto"),
-                    MenuItemData("Estoque", Icons.Default.Build, "controle_estoque"),
+                    MenuItemData("Estoque Atual", Icons.Default.Build, "controle_estoque"), // Visualizar o que tem
+                    MenuItemData("Repor Estoque", Icons.Default.Refresh, "entrada_estoque"), // A TELA QUE FIZEMOS ONTEM
                     MenuItemData("Relatórios", Icons.Default.Info, "relatorios"),
                     MenuItemData("Usuários", Icons.Default.AccountBox, "cadastro_usuario")
                 )

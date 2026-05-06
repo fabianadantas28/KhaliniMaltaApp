@@ -30,7 +30,7 @@ class RegistroVendaViewModel(
     fun buscarProduto(query: String) {
         viewModelScope.launch {
             // Agora o 'buscarPorNome' vai ser reconhecido!
-            produtoDao.buscarPorNome(query).collect { lista ->
+            produtoDao.buscarProdutosPorNome(query).collect { lista ->
                 _produtosEncontrados.value = lista
             }
         }

@@ -7,16 +7,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavType // ADICIONADO
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument // ADICIONADO: Essencial para os argumentos de venda
+import androidx.navigation.navArgument
 import com.example.khalinimaltaapp.data.database.AppDatabase
 import com.example.khalinimaltaapp.ui.theme.KhaliniMaltaAppTheme
 import com.example.khalinimaltaapp.viewmodel.*
 import com.example.khalinimaltaapp.ui.relatorio.PaginaRelatorio
 import com.example.khalinimaltaapp.ui.estoque.PaginaControleEstoque
+
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -165,7 +167,7 @@ class MainActivity : ComponentActivity() {
                         PaginaRelatorio(onVoltar = { navController.popBackStack() }, viewModel = rViewModel)
                     }
 
-                    // ROTA DE VENDAS ATUALIZADA
+                    // ROTA DE VENDAS
                     composable(
                         route = "vendas?produtoNome={produtoNome}&preco={preco}",
                         arguments = listOf(
@@ -195,6 +197,22 @@ class MainActivity : ComponentActivity() {
                             vModel = vendaViewModel,
                             produtoNome = produtoNome,
                             produtoPreco = preco
+                        )
+                    }
+
+                    // ROTA DE ENTRADA DE ESTOQUE (AGORA NO LUGAR CERTO!)
+                    composable("entrada_estoque") {
+                        val entradaViewModel: EntradaEstoqueViewModel = viewModel(
+                            factory = object : ViewModelProvider.Factory {
+                                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                    return EntradaEstoqueViewModel(db.produtoDao()) as T
+                                }
+                            }
+                        )
+
+                        EntradaEstoqueScreen(
+                            navController = navController,
+                            vModel = entradaViewModel
                         )
                     }
                 }
