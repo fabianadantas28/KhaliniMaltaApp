@@ -20,6 +20,7 @@ import com.example.khalinimaltaapp.ui.estoque.PaginaControleEstoque
 
 
 
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,6 +31,14 @@ class MainActivity : ComponentActivity() {
                 val db = AppDatabase.getDatabase(context)
 
                 val sharedViewModel: CadastroClienteViewModel = viewModel()
+
+                val vendaViewModel: RegistroVendaViewModel = viewModel(
+                    factory = object : ViewModelProvider.Factory {
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                            return RegistroVendaViewModel(db.produtoDao(), db.vendaDao()) as T
+                        }
+                    }
+                )
 
                 NavHost(navController = navController, startDestination = "splash") {
 
@@ -169,43 +178,19 @@ class MainActivity : ComponentActivity() {
 
                     // ROTA DE VENDAS
                     composable(
-                        // Adicionamos &quantidade={quantidade} no final da rota
                         route = "vendas?produtoNome={produtoNome}&preco={preco}&quantidade={quantidade}",
                         arguments = listOf(
-                            navArgument("produtoNome") {
-                                type = NavType.StringType
-                                defaultValue = ""
-                            },
-                            navArgument("preco") {
-                                type = NavType.StringType
-                                defaultValue = ""
-                            },
-                            // NOVO ARGUMENTO: Quantidade (Tipo Inteiro)
-                            navArgument("quantidade") {
-                                type = NavType.IntType
-                                defaultValue = 1
-                            }
+                            navArgument("produtoNome") { type = NavType.StringType; defaultValue = "" },
+                            navArgument("preco") { type = NavType.StringType; defaultValue = "" },
+                            navArgument("quantidade") { type = NavType.IntType; defaultValue = 1 }
                         )
-                    ) { backStackEntry ->
-                        val produtoNome = backStackEntry.arguments?.getString("produtoNome") ?: ""
-                        val preco = backStackEntry.arguments?.getString("preco") ?: ""
-                        // PEGAMOS A QUANTIDADE AQUI:
-                        val quantidade = backStackEntry.arguments?.getInt("quantidade") ?: 1
+                    ) {
 
-                        val vendaViewModel: RegistroVendaViewModel = viewModel(
-                            factory = object : ViewModelProvider.Factory {
-                                override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                                    return RegistroVendaViewModel(db.produtoDao(), db.vendaDao()) as T
-                                }
-                            }
-                        )
 
+                        // AQUI ESTÁ O CONSERTO: Só passamos o que a função agora pede
                         RegistroVendaScreen(
                             navController = navController,
-                            vModel = vendaViewModel,
-                            produtoNome = produtoNome,
-                            produtoPreco = preco,
-                            quantidade = quantidade // PASSAMOS PARA A TELA
+                            vModel = vendaViewModel
                         )
                     }
 
