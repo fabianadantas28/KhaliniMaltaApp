@@ -31,7 +31,6 @@ fun CadastroClienteScreen(
 
     var concordouLGPD by remember { mutableStateOf(false) }
     // Dica: Se quiser que o complemento salve no ViewModel, use viewModel.complemento
-    var complementoLocal by remember { mutableStateOf("") }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(

@@ -21,14 +21,14 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     var mostrarDialogo by mutableStateOf(false)
     var loginErro by mutableStateOf(false)
 
-    // CONTROLE DE ACESSO
     var irParaHome by mutableStateOf(false)
     var irParaTrocaSenha by mutableStateOf(false)
-    var tipoUsuarioLogado by mutableStateOf("") // NOVO: Guarda se é "ADMIN" ou "CLIENTE"
+    var tipoUsuarioLogado by mutableStateOf("")
 
     var usuarioLogado: Usuario? = null
 
-    fun fazerLogin() {
+    // ALTERAÇÃO AQUI: A função agora pede o sharedViewModel para salvar o nome do cliente
+    fun fazerLogin(sharedViewModel: CadastroClienteViewModel) {
         if (usuario.isBlank() || senha.isBlank()) {
             loginErro = true
             return
@@ -40,6 +40,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             // 1. LOGIN ADMIN (Bloco de Emergência)
             if (usuarioDigitado == "admin" && senha == "admin") {
                 tipoUsuarioLogado = "ADMIN"
+                sharedViewModel.nome = "Administrador" // Define um nome para o admin
                 irParaHome = true
                 loginErro = false
                 return@launch
@@ -49,7 +50,11 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             val func = usuarioDao.realizarLogin(usuarioDigitado, senha)
             if (func != null) {
                 usuarioLogado = func
-                tipoUsuarioLogado = "ADMIN" // Marca como Admin
+                tipoUsuarioLogado = func.perfil
+
+                // SALVA O NOME DO FUNCIONÁRIO NO VIEWMODEL COMPARTILHADO
+                sharedViewModel.nome = func.nome
+
                 if (func.trocarSenha) {
                     irParaTrocaSenha = true
                 } else {
@@ -62,7 +67,12 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             // 3. LOGIN CLIENTE
             val cliente = clienteDao.buscarPorEmailESenha(usuarioDigitado, senha)
             if (cliente != null) {
-                tipoUsuarioLogado = "CLIENTE" // Marca como Cliente
+                tipoUsuarioLogado = "CLIENTE"
+
+                // AQUI ESTÁ A CHAVE DO PROBLEMA:
+                // Passamos o nome que veio do banco para o sharedViewModel
+                sharedViewModel.nome = cliente.nome
+
                 irParaHome = true
                 loginErro = false
             } else {

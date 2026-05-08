@@ -14,10 +14,9 @@ import kotlinx.coroutines.launch
 
 class CadastroClienteViewModel(application: Application) : AndroidViewModel(application) {
 
-    // 1. Conexão com o banco de dados via DAO
     private val clienteDao = AppDatabase.getDatabase(application).clienteDao()
 
-    // 2. Variáveis da Tela 1 (Dados Pessoais)
+    // Variáveis de estado
     var nome by mutableStateOf("")
     var sobrenome by mutableStateOf("")
     var dataNasc by mutableStateOf("")
@@ -26,24 +25,17 @@ class CadastroClienteViewModel(application: Application) : AndroidViewModel(appl
     var email by mutableStateOf("")
     var complemento by mutableStateOf("")
     var concordoLGPD by mutableStateOf(false)
-
-    // 3. Variáveis da Tela 2 (Senha)
     var senha by mutableStateOf("")
     var confirmarSenha by mutableStateOf("")
 
     /**
-     * Função que une os dados das duas telas e salva no banco de dados.
-     * Ela é chamada pelo botão "Finalizar" na tela de senha.
+     * Salva o cliente e MANTÉM o nome na variável para ser usado no recibo.
      */
     fun salvarNoBanco() {
-        // Validação básica: as senhas precisam ser iguais e não vazias
         if (senha == confirmarSenha && senha.isNotEmpty()) {
-
             viewModelScope.launch(Dispatchers.IO) {
                 try {
-                    // Monta o objeto Cliente com os estados atuais do ViewModel
                     val novoCliente = Cliente(
-                        // O 'id' não é passado aqui pois é auto-incremento (id = 0 no model)
                         nome = nome,
                         sobrenome = sobrenome,
                         data = dataNasc,
@@ -53,13 +45,15 @@ class CadastroClienteViewModel(application: Application) : AndroidViewModel(appl
                         senha = senha
                     )
 
-                    // Comando que grava efetivamente no SQLite através do Room
                     clienteDao.inserir(novoCliente)
 
+                    // IMPORTANTE: Não limpamos o 'nome' imediatamente aqui
+                    // para que a RegistroVendaScreen consiga ler o nome do cliente logado.
                     Log.d("DB_SUCCESS", "Cliente ${novoCliente.nome} salvo com sucesso!")
 
-                    // Limpa os campos após o sucesso para um novo cadastro futuro
-                    limparCampos()
+                    // Limpamos apenas os dados sensíveis (senhas e termos)
+                    senha = ""
+                    confirmarSenha = ""
 
                 } catch (e: Exception) {
                     Log.e("DB_ERROR", "Erro ao inserir cliente: ${e.message}")
@@ -70,9 +64,26 @@ class CadastroClienteViewModel(application: Application) : AndroidViewModel(appl
         }
     }
 
-    // Função para resetar os campos após o cadastro ou cancelamento
-    fun limparCampos() {
+    /**
+     * Função para ser chamada especificamente no Logout
+     */
+    fun limparParaSair() {
         nome = ""
+        sobrenome = ""
+        dataNasc = ""
+        cpf = ""
+        foneCelular = ""
+        email = ""
+        complemento = ""
+        concordoLGPD = false
+        senha = ""
+        confirmarSenha = ""
+    }
+
+    // Mantive a função original se você precisar dela, mas removi o 'nome'
+    // para ele não sumir da tela de vendas.
+    fun limparCampos() {
+        // nome = "" <- Comentado para o nome não sumir da venda/recibo
         sobrenome = ""
         dataNasc = ""
         cpf = ""

@@ -30,6 +30,7 @@ fun CriarSenhaScreen(
 ) {
     val dourado = Color(0xFFD4AF37)
     val scrollState = rememberScrollState()
+    var senhaErro by remember { mutableStateOf(false) } // Adicione esta linha
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -72,6 +73,17 @@ fun CriarSenhaScreen(
                 corDourada = dourado,
                 isSenha = true
             )
+            // ADICIONEI ESTE BLOCO AQUI:
+            if (senhaErro) {
+                Text(
+                    text = "As senhas não coincidem ou estão vazias.",
+                    color = Color.Red,
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(40.dp))
 
             Spacer(modifier = Modifier.height(40.dp))
 
@@ -87,8 +99,7 @@ fun CriarSenhaScreen(
                         onFinalizar()
 
                     } else {
-                        // Caso as senhas estejam diferentes ou vazias
-                        // Log.w ou um Toast ajudaria aqui
+                        senhaErro = true // ATIVA O ERRO AQUI!
                     }
                 },
                 modifier = Modifier

@@ -17,43 +17,42 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.khalinimaltaapp.viewmodel.LoginViewModel
+import com.example.khalinimaltaapp.viewmodel.CadastroClienteViewModel
 
 @Composable
 fun LoginScreen(
-    navController: NavController, // Adicionado para permitir a navegação dinâmica
+    navController: NavController,
     onIrParaCadastro: () -> Unit,
     onIrParaPaginaInicial: () -> Unit,
-    viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    sharedViewModel: CadastroClienteViewModel // ADICIONADO: Para salvar o nome do cliente logado
 ) {
     val dourado = Color(0xFFC79E5E)
-
-    // --- BLOCO: MONITORANDO O DESTINO ---
 
     // 1. Caso precise trocar a senha
     LaunchedEffect(viewModel.irParaTrocaSenha) {
         if (viewModel.irParaTrocaSenha) {
             val id = viewModel.usuarioLogado?.id ?: 0
-            viewModel.limparCampos()
+            // Não limpamos campos aqui para não perder a referência do ID antes da navegação
             navController.navigate("troca_senha/$id")
+            viewModel.irParaTrocaSenha = false
         }
     }
 
-    // 2. Direcionamento Inteligente (AQUI ESTÁ A CHAVE!)
+    // 2. Direcionamento Inteligente
     LaunchedEffect(viewModel.irParaHome) {
         if (viewModel.irParaHome) {
             if (viewModel.tipoUsuarioLogado == "ADMIN") {
-                // Admin vai para a página de gestão
                 onIrParaPaginaInicial()
             } else {
-                // Cliente vai direto para escolher produtos
                 navController.navigate("pagina_categorias") {
                     popUpTo("login") { inclusive = true }
                 }
             }
-            viewModel.limparCampos()
+            // Resetamos apenas os gatilhos de navegação, o nome permanece no sharedViewModel
+            viewModel.irParaHome = false
         }
     }
-
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -105,7 +104,6 @@ fun LoginScreen(
                 shape = RoundedCornerShape(12.dp)
             )
 
-            // Mensagem de Erro (Caso o login falhe)
             if (viewModel.loginErro) {
                 Text(
                     text = "Usuário ou senha incorretos",
@@ -124,9 +122,9 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Botão Entrar - Agora chama a função de login da ViewModel
+            // BOTÃO ENTRAR - AGORA PASSA O SHAREDVIEWMODEL
             Button(
-                onClick = { viewModel.fazerLogin() },
+                onClick = { viewModel.fazerLogin(sharedViewModel) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),

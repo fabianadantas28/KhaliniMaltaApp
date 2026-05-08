@@ -54,21 +54,23 @@ class CadastroProdutoViewModel(private val produtoDao: ProdutoDao) : ViewModel()
 
     // --- 3. FUNÇÃO PARA A VITRINE (BUSCAR PRODUTOS PARA O CLIENTE) ---
     // Esta função "conversa" com o DAO para trazer a lista filtrada
-    fun getProdutosPorCategoria(categoriaNome: String): Flow<List<Produto>> {
+    // No seu CadastroProdutoViewModel.kt, altere apenas esta parte:
+
+    // Antes era: fun getProdutosPorCategoria
+    // Agora coloque o nome que o João sugeriu para padronizar:
+    fun buscarPorCategoria(categoriaNome: String): Flow<List<Produto>> {
         return produtoDao.buscarPorCategoria(categoriaNome)
     }
 
     // --- 4. FUNÇÃO DE VENDA (DAR BAIXA NO ESTOQUE) ---
-    // Diminui 1 unidade do estoque no banco de dados
     fun venderProduto(produto: Produto) {
         if (produto.qtdeEstoque > 0) {
             viewModelScope.launch {
-                // Criamos uma cópia do produto com o novo valor de estoque
                 val produtoAtualizado = produto.copy(
                     qtdeEstoque = produto.qtdeEstoque - 1
                 )
-                // Avisamos o DAO para atualizar no banco
-                produtoDao.atualizar(produtoAtualizado)
+                // Alterado para updateProduto para alinhar com o DAO novo
+                produtoDao.updateProduto(produtoAtualizado)
             }
         }
     }

@@ -1,5 +1,6 @@
-package com.example.khalinimaltaapp.ui.estoque
+package com.example.khalinimaltaapp
 
+import com.example.khalinimaltaapp.viewmodel.ControleEstoqueViewModel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -21,7 +22,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.khalinimaltaapp.data.Produto
 import com.example.khalinimaltaapp.data.database.AppDatabase
-import com.example.khalinimaltaapp.viewmodel.ControleEstoqueViewModel
 
 // CORES DA KHALINI
 val KhaliniGold = Color(0xFFC39953)
@@ -36,7 +36,6 @@ fun PaginaControleEstoque() {
     val context = LocalContext.current
     val db = AppDatabase.getDatabase(context)
 
-    // SOLUÇÃO: Criando o ViewModel usando o Factory nativo sem precisar de arquivos extras
     val viewModel: ControleEstoqueViewModel = viewModel(
         factory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -45,7 +44,8 @@ fun PaginaControleEstoque() {
         }
     )
 
-    val produtos by viewModel.todosOsProdutos.collectAsState(initial = emptyList())
+    // 1. MUDANÇA AQUI: Agora observamos a lista filtrada em vez de todosOsProdutos
+    val produtos by viewModel.produtosFiltrados.collectAsState()
     val totalItens = produtos.sumOf { it.qtdeEstoque }
 
     Scaffold(
@@ -88,12 +88,21 @@ fun PaginaControleEstoque() {
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // 2. MUDANÇA AQUI: Conectamos o valor e a mudança ao ViewModel
             OutlinedTextField(
-                value = "",
-                onValueChange = {},
+                value = viewModel.buscaTexto,
+                onValueChange = { viewModel.buscaTexto = it },
                 placeholder = { Text("Buscar produto...", color = Color.Gray, fontSize = 14.sp) },
                 modifier = Modifier.fillMaxWidth(),
                 leadingIcon = { Icon(Icons.Default.Search, null, tint = KhaliniGold) },
+                // Botão para limpar a busca se houver texto
+                trailingIcon = {
+                    if (viewModel.buscaTexto.isNotEmpty()) {
+                        IconButton(onClick = { viewModel.buscaTexto = "" }) {
+                            Icon(Icons.Default.Close, null, tint = Color.Gray)
+                        }
+                    }
+                },
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     unfocusedContainerColor = CardBackground,
@@ -109,7 +118,8 @@ fun PaginaControleEstoque() {
 
             if (produtos.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Nenhum produto cadastrado.", color = Color.Gray)
+                    val mensagem = if (viewModel.buscaTexto.isEmpty()) "Nenhum produto cadastrado." else "Nenhum resultado encontrado."
+                    Text(mensagem, color = Color.Gray)
                 }
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {

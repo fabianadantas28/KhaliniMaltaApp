@@ -16,19 +16,30 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.khalinimaltaapp.viewmodel.RegistroVendaViewModel
+import com.example.khalinimaltaapp.viewmodel.CadastroClienteViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegistroVendaScreen(
     navController: NavController,
-    vModel: RegistroVendaViewModel
+    vModel: RegistroVendaViewModel,
+    clienteViewModel: CadastroClienteViewModel
 ) {
     val navBackStackEntry = navController.currentBackStackEntry
     val listaCompras by vModel.itensCarrinho.collectAsState()
     val totalGeral = listaCompras.sumOf { it.precoUnitario * it.quantidade }
     val erroMensagem by vModel.erroVenda.collectAsState()
 
-    // Lógica para adicionar o item que acabou de chegar
+    // CORREÇÃO 1: Tornar o nome reativo.
+    // Usamos o nome que está no clienteViewModel. Se ele mudar lá, muda aqui na hora.
+    val nomeExibicao = if (clienteViewModel.nome.isEmpty()) "Cliente Balcão" else clienteViewModel.nome
+
+    var expandido by remember { mutableStateOf(false) }
+    var formaPagamento by remember { mutableStateOf("Selecione...") }
+
+    val opcoesPagamento = listOf("Pix", "Cartão", "Dinheiro")
+    val corOuro = Color(0xFFC39953)
+
     LaunchedEffect(navBackStackEntry) {
         val nome = navBackStackEntry?.arguments?.getString("produtoNome") ?: ""
         val preco = navBackStackEntry?.arguments?.getString("preco") ?: ""
@@ -39,11 +50,6 @@ fun RegistroVendaScreen(
             navBackStackEntry?.arguments?.remove("produtoNome")
         }
     }
-
-    var expandido by remember { mutableStateOf(false) }
-    var formaPagamento by remember { mutableStateOf("Selecione...") }
-    val opcoesPagamento = listOf("Pix", "Cartão", "Dinheiro")
-    val corOuro = Color(0xFFC39953)
 
     Scaffold(
         topBar = {
@@ -57,7 +63,6 @@ fun RegistroVendaScreen(
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Black)
             )
         },
-        // O segredo está aqui: o botão fica fixo no bottomBar
         bottomBar = {
             if (listaCompras.isNotEmpty()) {
                 Column(
@@ -67,14 +72,12 @@ fun RegistroVendaScreen(
                 ) {
                     Button(
                         onClick = {
-                            vModel.finalizarCompra(formaPagamento) {
-                                // Esta lógica limpa TODAS as telas anteriores (carrinho, lista, etc)
-                                // e volta o usuário para a página de categorias
-                                navController.navigate("pagina_categorias") {
-                                    popUpTo("home") { // Isso garante que ele não volte para telas proibidas
-                                        inclusive = false
-                                    }
-                                }
+                            // CORREÇÃO 2: Passar os nomes dos parâmetros para não haver erro de ordem
+                            vModel.finalizarCompra(
+                                nomeCliente = nomeExibicao,
+                                formaPagamento = formaPagamento
+                            ) {
+                                // O recibo será disparado pela MainActivity
                             }
                         },
                         modifier = Modifier.fillMaxWidth().height(55.dp),
@@ -100,11 +103,20 @@ fun RegistroVendaScreen(
         ) {
             item {
                 Spacer(modifier = Modifier.height(16.dp))
+
+                Text("CLIENTE LOGADO", color = corOuro, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = nomeExibicao, // Usando a variável corrigida
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
                 Text("ITENS SELECIONADOS", color = corOuro, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // Lista de produtos
             items(listaCompras) { item ->
                 Card(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
@@ -113,7 +125,7 @@ fun RegistroVendaScreen(
                     Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(item.nome, color = Color.White, fontWeight = FontWeight.Bold)
-                            Text("${item.quantidade}x R$ ${item.precoUnitario}", color = Color.Gray)
+                            Text("${item.quantidade}x R$ ${String.format("%.2f", item.precoUnitario)}", color = Color.Gray)
                         }
                         Text("R$ ${String.format("%.2f", item.precoUnitario * item.quantidade)}", color = corOuro, fontWeight = FontWeight.Bold)
                     }
@@ -125,7 +137,6 @@ fun RegistroVendaScreen(
                 Text("PAGAMENTO", color = corOuro, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Menu de Pagamento
                 ExposedDropdownMenuBox(
                     expanded = expandido,
                     onExpandedChange = { expandido = !expandido }
@@ -164,7 +175,6 @@ fun RegistroVendaScreen(
                     Text(erroMensagem, color = Color.Red, modifier = Modifier.padding(top = 8.dp))
                 }
 
-                // Espaço extra para o teclado ou scroll não cobrir o final
                 Spacer(modifier = Modifier.height(50.dp))
             }
         }

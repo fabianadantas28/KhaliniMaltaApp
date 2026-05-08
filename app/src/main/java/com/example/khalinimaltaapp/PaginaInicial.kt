@@ -126,9 +126,11 @@ fun PaginaPrincipalKM(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 2. AJUSTADO: Usando o nome correto que definimos no topo
-            BotaoInferior(icon = R.drawable.baseline_home_24, label = "Início", aoClicar = onIrParaLogin)
+            // Alterado: Removido o onIrParaLogin daqui para o usuário não ser deslogado por erro
+            BotaoInferior(icon = R.drawable.baseline_home_24, label = "Início", aoClicar = { })
+
             Spacer(modifier = Modifier.width(45.dp))
+
             BotaoInferior(icon = android.R.drawable.ic_dialog_dialer, label = "Menu", aoClicar = onAbrirMenu)
         }
     }

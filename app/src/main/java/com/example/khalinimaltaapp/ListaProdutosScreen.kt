@@ -28,7 +28,7 @@ fun ListaProdutosScreen(
     categoriaSelecionada: String,
     viewModel: CadastroProdutoViewModel
 ) {
-    val produtos by viewModel.getProdutosPorCategoria(categoriaSelecionada).collectAsState(initial = emptyList())
+    val produtos by viewModel.buscarPorCategoria(categoriaSelecionada).collectAsState(initial = emptyList())
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
