@@ -119,8 +119,16 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                        composable("menu") {
-                            MenuScreen(onNavegar = { rota -> navController.navigate(rota) })
+                        composable(route = "menu") {
+                            MenuScreen(
+                                onNavegar = { rota -> navController.navigate(rota) },
+                                onLogout = {
+                                    sharedViewModel.limparParaSair() // Use o nome exato da função do seu ViewModel
+                                    navController.navigate("login") {
+                                        popUpTo("home") { inclusive = true }
+                                    }
+                                }
+                            )
                         }
 
                         composable(route = "pagina_categorias") {

@@ -28,9 +28,11 @@ class CadastroClienteViewModel(application: Application) : AndroidViewModel(appl
     var senha by mutableStateOf("")
     var confirmarSenha by mutableStateOf("")
 
-    /**
-     * Salva o cliente e MANTÉM o nome na variável para ser usado no recibo.
-     */
+    // --- NOVA FUNÇÃO PARA CONSERTAR O ERRO NA MAINACTIVITY ---
+    fun atualizarNome(novoNome: String) {
+        nome = novoNome
+    }
+
     fun salvarNoBanco() {
         if (senha == confirmarSenha && senha.isNotEmpty()) {
             viewModelScope.launch(Dispatchers.IO) {
@@ -44,46 +46,24 @@ class CadastroClienteViewModel(application: Application) : AndroidViewModel(appl
                         email = email,
                         senha = senha
                     )
-
                     clienteDao.inserir(novoCliente)
-
-                    // IMPORTANTE: Não limpamos o 'nome' imediatamente aqui
-                    // para que a RegistroVendaScreen consiga ler o nome do cliente logado.
                     Log.d("DB_SUCCESS", "Cliente ${novoCliente.nome} salvo com sucesso!")
 
-                    // Limpamos apenas os dados sensíveis (senhas e termos)
+                    // Limpa apenas dados de senha após cadastro
                     senha = ""
                     confirmarSenha = ""
-
                 } catch (e: Exception) {
                     Log.e("DB_ERROR", "Erro ao inserir cliente: ${e.message}")
                 }
             }
-        } else {
-            Log.w("VALIDATION", "Senhas não conferem ou campos obrigatórios vazios.")
         }
     }
 
     /**
-     * Função para ser chamada especificamente no Logout
+     * Função chamada no Logout pela MainActivity
      */
     fun limparParaSair() {
         nome = ""
-        sobrenome = ""
-        dataNasc = ""
-        cpf = ""
-        foneCelular = ""
-        email = ""
-        complemento = ""
-        concordoLGPD = false
-        senha = ""
-        confirmarSenha = ""
-    }
-
-    // Mantive a função original se você precisar dela, mas removi o 'nome'
-    // para ele não sumir da tela de vendas.
-    fun limparCampos() {
-        // nome = "" <- Comentado para o nome não sumir da venda/recibo
         sobrenome = ""
         dataNasc = ""
         cpf = ""
