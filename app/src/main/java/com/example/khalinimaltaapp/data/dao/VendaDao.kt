@@ -12,6 +12,7 @@ interface VendaDao {
     @Insert
     suspend fun registrarVenda(venda: Venda): Long
 
+    // 1. Buscamos pelo ID decrescente para garantir que a última venda apareça primeiro
     @Query("SELECT * FROM vendas ORDER BY id DESC")
     fun listarTodasVendas(): Flow<List<Venda>>
 
@@ -23,4 +24,10 @@ interface VendaDao {
 
     @Query("SELECT COUNT(*) FROM vendas")
     fun totalQuantidadeVendas(): Flow<Int>
+
+    // 2. CORREÇÃO DO ERRO:
+    // Se o seu app deu erro no campo 'data', vamos ordenar pelo ID
+    // que também garante a ordem cronológica correta e não quebra o sistema.
+    @Query("SELECT * FROM vendas ORDER BY id DESC")
+    fun buscarTodasVendas(): Flow<List<Venda>>
 }

@@ -14,5 +14,5 @@ data class Venda(
     val formaPagamento: String,
     val quantidade: Int,
     val valorTotal: Double,
-    val dataHora: String
+    val dataHora: String // Este é o nome correto que usaremos no DAO
 )

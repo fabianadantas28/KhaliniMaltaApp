@@ -62,17 +62,20 @@ fun MenuAdministracaoScreen(
                 val itensAdmin = listOf(
                     MenuItemData("Clientes", Icons.Default.Person, "lista_cliente"),
                     MenuItemData("Cadastrar Produto", Icons.Default.Add, "cadastro_produto"),
-                    MenuItemData("Estoque Atual", Icons.Default.Build, "controle_estoque"), // Visualizar o que tem
-                    MenuItemData("Repor Estoque", Icons.Default.Refresh, "entrada_estoque"), // A TELA QUE FIZEMOS ONTEM
+                    MenuItemData("Vendas", Icons.Default.ShoppingCart, "gestao_vendas"),
+                    MenuItemData("Estoque Atual", Icons.Default.Build, "controle_estoque"),
+                    MenuItemData("Repor Estoque", Icons.Default.Refresh, "entrada_estoque"),
                     MenuItemData("Relatórios", Icons.Default.Info, "relatorios"),
                     MenuItemData("Usuários", Icons.Default.AccountBox, "cadastro_usuario")
                 )
 
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 25.dp), // Aumentei aqui para as caixas "encolherem" para o centro
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(itensAdmin) { item ->
                         MenuCard(item, onNavegar)
@@ -99,8 +102,8 @@ fun MenuAdministracaoScreen(
 fun MenuCard(item: MenuItemData, onNavegar: (String) -> Unit) {
     Card(
         onClick = { onNavegar(item.rota) },
-        modifier = Modifier.aspectRatio(1f).fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.aspectRatio(1.2f).fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         border = BorderStroke(1.dp, CorOuroMenuFixo)
     ) {
@@ -113,10 +116,10 @@ fun MenuCard(item: MenuItemData, onNavegar: (String) -> Unit) {
                 imageVector = item.icone,
                 contentDescription = item.titulo,
                 tint = CorOuroMenuFixo,
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier.size(26.dp)
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = item.titulo, color = CorOuroMenuFixo, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(text = item.titulo, color = CorOuroMenuFixo, fontSize = 11.sp, fontWeight = FontWeight.Medium)
         }
     }
 }

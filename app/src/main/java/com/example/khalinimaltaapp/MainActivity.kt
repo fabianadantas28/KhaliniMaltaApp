@@ -219,6 +219,17 @@ class MainActivity : ComponentActivity() {
                                 vModel = entradaViewModel
                             )
                         }
+
+                        composable("gestao_vendas") {
+                            val gvViewModel: GestaoVendasViewModel = viewModel(
+                                factory = object : ViewModelProvider.Factory {
+                                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                        return GestaoVendasViewModel(db.vendaDao()) as T
+                                    }
+                                }
+                            )
+                            GestaoVendasScreen(onVoltar = { navController.popBackStack() }, viewModel = gvViewModel)
+                        }
                     }
                 }
             }
