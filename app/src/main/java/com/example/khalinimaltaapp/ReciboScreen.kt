@@ -13,7 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.khalinimaltaapp.data.Venda // Importante para ele reconhecer o objeto Venda
+import com.example.khalinimaltaapp.data.Venda
 
 @Composable
 fun ReciboScreen(
@@ -55,7 +55,9 @@ fun ReciboScreen(
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Text("CLIENTE: ${venda.nomeCliente.uppercase()}", color = Color.White, fontWeight = FontWeight.Bold)
-                    Divider(modifier = Modifier.padding(vertical = 12.dp), color = Color.Gray)
+
+                    @OptIn(ExperimentalMaterial3Api::class)
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color.Gray)
 
                     // Detalhes da Compra
                     Text("PRODUTO: ${venda.nomeProduto}", color = Color.LightGray)
@@ -68,11 +70,18 @@ fun ReciboScreen(
                         Text(venda.formaPagamento, color = dourado, fontWeight = FontWeight.Bold)
                     }
 
-                    Divider(modifier = Modifier.padding(vertical = 12.dp), color = Color.Gray)
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color.Gray)
 
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text("TOTAL:", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        Text("R$ ${venda.valorTotal}", color = dourado, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+
+                        // LINHA CORRIGIDA CONFORME SUGESTÃO DO JOÃO:
+                        Text(
+                            text = "R$ ${String.format("%.2f", venda.valorTotal)}",
+                            color = dourado,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }

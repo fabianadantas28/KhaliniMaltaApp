@@ -5,8 +5,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -26,14 +29,32 @@ fun EntradaEstoqueScreen(navController: NavController, vModel: EntradaEstoqueVie
             .background(Color.Black)
             .padding(16.dp)
     ) {
-        Spacer(modifier = Modifier.height(80.dp))
+        // --- CABEÇALHO COM SETA DE VOLTAR ---
+        Spacer(modifier = Modifier.height(60.dp)) // Espaço para a barra de status
 
-        Text(
-            text = "ENTRADA DE ESTOQUE",
-            color = corOuro,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Voltar",
+                    tint = corOuro,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Text(
+                text = "ENTRADA DE ESTOQUE",
+                color = corOuro,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        // ------------------------------------
 
         Spacer(modifier = Modifier.height(16.dp))
 

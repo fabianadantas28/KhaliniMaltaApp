@@ -1,33 +1,39 @@
 package com.example.khalinimaltaapp
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.khalinimaltaapp.viewmodel.RelatoriosViewModel
 
-val CorOuroKhalini = Color(0xFFC79E5E)
+// CORES OFICIAIS
+val CorOuroPrincipalHome = Color(0xFFC79E5E)
+val CardDarkBlueHome = Color(0xFF121A24)
 
 @Composable
 fun PaginaPrincipalKM(
     onAbrirMenu: () -> Unit,
-    onIrParaLogin: () -> Unit // 1. ADICIONADO: Agora a tela reconhece esta ação
+    onIrParaLogin: () -> Unit,
+    viewModel: RelatoriosViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
+    val totalClientes by viewModel.totalClientes.collectAsState(initial = 0)
+    val valorTotalEstoque by viewModel.valorTotalEstoque.collectAsState(initial = 0.0)
+
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(id = R.drawable.fundo_logomarca),
@@ -40,77 +46,97 @@ fun PaginaPrincipalKM(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 35.dp),
+                .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(150.dp))
+            Spacer(modifier = Modifier.height(130.dp))
 
             Text(
                 text = "Bem-vindo(a)! Gerencie suas\nvendas e estoque com facilidade.",
-                color = CorOuroKhalini,
+                color = CorOuroPrincipalHome,
                 fontSize = 15.sp,
                 textAlign = TextAlign.Center,
                 lineHeight = 20.sp
             )
 
-            Spacer(modifier = Modifier.height(25.dp))
+            Spacer(modifier = Modifier.height(30.dp))
 
             Text(
                 text = "Resumo do Dia",
-                color = CorOuroKhalini,
-                fontSize = 20.sp,
+                color = CorOuroPrincipalHome,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Bold
             )
 
-            Spacer(modifier = Modifier.height(25.dp))
+            Spacer(modifier = Modifier.height(15.dp))
 
+            // SEÇÃO DE CARDS IGUAL À FIGURA
+            // Resumo do Dia com design fiel à imagem
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                CardStatus(titulo = "Vendas Mês", valor = "$")
-                CardStatus(titulo = "Alertas", iconRes = R.drawable.outline_check_alert_24)
-                CardStatus(titulo = "Novos Clientes", iconRes = R.drawable.outline_demography_24)
+                // 1. Vendas Mês (Valor Real do Estoque)
+                CardAtivoHome(
+                    titulo = "Vendas\nMês",
+                    valor = "R$ ${"%.2f".format(valorTotalEstoque)}",
+                    modifier = Modifier.weight(1f)
+                )
+
+                // 2. Alertas Estoque (Seta para baixo em Dourado)
+                CardAtivoHome(
+                    titulo = "Alertas\nEstoque",
+                    mostrarSeta = true, // Ativa a seta nativa
+                    valor = "3",
+                    modifier = Modifier.weight(1f)
+                )
+
+                // 3. Novos Clientes (Contagem Real)
+                CardAtivoHome(
+                    titulo = "Novos\nClientes",
+                    valor = "$totalClientes",
+                    modifier = Modifier.weight(1f)
+                )
             }
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(35.dp))
 
             Text(
                 text = "Vendas Diárias na Última Semana",
-                color = CorOuroKhalini,
+                color = CorOuroPrincipalHome,
                 fontSize = 13.sp
             )
 
+            // GRÁFICO
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(0.9f)
-                    .height(160.dp)
-                    .padding(top = 8.dp)
-                    .border(1.dp, CorOuroKhalini, RoundedCornerShape(12.dp)),
+                    .fillMaxWidth()
+                    .height(180.dp)
+                    .padding(top = 10.dp)
+                    .background(Color.Black.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
+                    .border(1.dp, CorOuroPrincipalHome.copy(alpha = 0.4f), RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.BottomCenter
             ) {
                 Row(
-                    modifier = Modifier.fillMaxSize().padding(horizontal = 10.dp, vertical = 5.dp),
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 15.dp, vertical = 15.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.Bottom
                 ) {
-                    val vendasSemana = listOf(0.4f, 0.7f, 0.5f, 0.9f, 0.6f, 0.8f, 0.3f)
-                    val dias = listOf("Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom")
-
-                    vendasSemana.forEachIndexed { index, altura ->
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Box(
-                                modifier = Modifier
-                                    .width(12.dp)
-                                    .fillMaxHeight(altura * 0.8f)
-                                    .background(CorOuroKhalini, RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
-                            )
-                            Text(
-                                text = dias[index].first().toString(),
-                                color = CorOuroKhalini,
-                                fontSize = 10.sp
-                            )
-                        }
+                    val vendasSemana = listOf(0.4f, 0.9f, 0.5f, 0.7f, 0.6f, 0.8f, 0.3f)
+                    val dias = listOf("S", "T", "Q", "Q", "S", "S", "D")
+                    vendasSemana.forEachIndexed { index, peso ->
+                        Box(
+                            modifier = Modifier
+                                .width(10.dp)
+                                .fillMaxHeight(peso)
+                                .background(
+                                    brush = Brush.verticalGradient(
+                                        colors = if (index == 1) listOf(CorOuroPrincipalHome, Color.White)
+                                        else listOf(CorOuroPrincipalHome.copy(alpha = 0.3f), Color.Transparent)
+                                    ),
+                                    shape = RoundedCornerShape(50)
+                                )
+                        )
                     }
                 }
             }
@@ -118,82 +144,49 @@ fun PaginaPrincipalKM(
             Spacer(modifier = Modifier.height(150.dp))
         }
 
+        // BARRA INFERIOR
         Row(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 50.dp)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 40.dp).fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
         ) {
-            // Alterado: Removido o onIrParaLogin daqui para o usuário não ser deslogado por erro
-            BotaoInferior(icon = R.drawable.baseline_home_24, label = "Início", aoClicar = { })
-
+            BotaoHome(icon = R.drawable.baseline_home_24, label = "Sair", aoClicar = onIrParaLogin)
             Spacer(modifier = Modifier.width(45.dp))
-
-            BotaoInferior(icon = android.R.drawable.ic_dialog_dialer, label = "Menu", aoClicar = onAbrirMenu)
+            BotaoHome(icon = android.R.drawable.ic_dialog_dialer, label = "Menu", aoClicar = onAbrirMenu)
         }
     }
 }
 
-// ... Restante das funções CardStatus e BotaoInferior (permanecem iguais) ...
 @Composable
-fun CardStatus(titulo: String, valor: String? = null, iconRes: Int? = null) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = titulo, color = CorOuroKhalini, fontSize = 10.sp, modifier = Modifier.padding(bottom = 4.dp))
-        Surface(
-            modifier = Modifier.size(75.dp),
-            shape = RoundedCornerShape(10.dp),
-            color = CorOuroKhalini
+fun CardAtivoHome(titulo: String, valor: String, modifier: Modifier, mostrarSeta: Boolean = false) {
+    Surface(
+        modifier = modifier.height(100.dp),
+        color = CardDarkBlueHome,
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(0.5.dp, CorOuroPrincipalHome.copy(alpha = 0.5f))
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                if (valor != null) {
-                    Text(text = valor, color = Color.Black, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                } else if (iconRes != null) {
-                    Icon(
-                        painter = painterResource(id = iconRes),
-                        contentDescription = null,
-                        tint = Color.Black,
-                        modifier = Modifier.size(32.dp)
-                    )
+            Text(text = titulo, color = CorOuroPrincipalHome, fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            Spacer(Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (mostrarSeta) {
+                    Icon(Icons.Default.KeyboardArrowDown, null, tint = CorOuroPrincipalHome, modifier = Modifier.size(20.dp))
                 }
+                Text(text = valor, color = Color.White, fontWeight = FontWeight.Bold, fontSize = if (valor.contains("R$")) 10.sp else 16.sp)
             }
         }
     }
 }
 
 @Composable
-fun BotaoInferior(icon: Int, label: String, aoClicar: () -> Unit) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .clickable { aoClicar() }
-            .padding(8.dp)
-    ) {
-        Surface(
-            modifier = Modifier.size(65.dp),
-            shape = RoundedCornerShape(12.dp),
-            color = CorOuroKhalini
-        ) {
-            Icon(
-                painter = painterResource(id = icon),
-                contentDescription = null,
-                tint = Color.Black,
-                modifier = Modifier.padding(16.dp)
-            )
+fun BotaoHome(icon: Int, label: String, aoClicar: () -> Unit) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable { aoClicar() }.padding(8.dp)) {
+        Surface(modifier = Modifier.size(60.dp), shape = RoundedCornerShape(12.dp), color = CorOuroPrincipalHome) {
+            Icon(painter = painterResource(id = icon), contentDescription = null, tint = Color.Black, modifier = Modifier.padding(16.dp))
         }
-        Text(
-            text = label,
-            color = CorOuroKhalini,
-            fontSize = 11.sp,
-            modifier = Modifier.padding(top = 4.dp)
-        )
+        Text(text = label, color = CorOuroPrincipalHome, fontSize = 11.sp, modifier = Modifier.padding(top = 4.dp))
     }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun PreviewPaginaPrincipalKM() {
-    // Para o Preview não dar erro, passamos funções vazias
-    PaginaPrincipalKM(onAbrirMenu = {}, onIrParaLogin = {})
 }

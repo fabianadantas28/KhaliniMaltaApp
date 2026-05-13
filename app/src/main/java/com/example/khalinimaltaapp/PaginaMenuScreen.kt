@@ -59,7 +59,7 @@ fun MenuScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 40.dp),
+                    .padding(bottom = 50.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 OutlinedButton(

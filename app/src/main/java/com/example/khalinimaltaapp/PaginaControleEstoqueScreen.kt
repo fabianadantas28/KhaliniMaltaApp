@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.khalinimaltaapp.data.Produto
 import com.example.khalinimaltaapp.data.database.AppDatabase
 
@@ -32,7 +33,7 @@ val StatusRed = Color(0xFFD50000)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PaginaControleEstoque() {
+fun PaginaControleEstoque(navController: NavController) { // Adicionado NavController
     val context = LocalContext.current
     val db = AppDatabase.getDatabase(context)
 
@@ -44,7 +45,6 @@ fun PaginaControleEstoque() {
         }
     )
 
-    // 1. MUDANÇA AQUI: Agora observamos a lista filtrada em vez de todosOsProdutos
     val produtos by viewModel.produtosFiltrados.collectAsState()
     val totalItens = produtos.sumOf { it.qtdeEstoque }
 
@@ -66,36 +66,41 @@ fun PaginaControleEstoque() {
                 .fillMaxSize()
                 .background(Color.Black)
                 .padding(innerPadding)
-                .padding(16.dp)
+                .padding(horizontal = 16.dp)
         ) {
+            // --- NOVO: CABEÇALHO COM SETA DE VOLTAR ---
+            Spacer(modifier = Modifier.height(10.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Build, null, tint = KhaliniGold, modifier = Modifier.size(22.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        "Controle de\nEstoque",
-                        color = Color.White,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        lineHeight = 22.sp
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Voltar",
+                        tint = KhaliniGold
                     )
                 }
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(Icons.Default.Build, null, tint = KhaliniGold, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    "Controle de Estoque",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
+            // ------------------------------------------
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // 2. MUDANÇA AQUI: Conectamos o valor e a mudança ao ViewModel
             OutlinedTextField(
                 value = viewModel.buscaTexto,
                 onValueChange = { viewModel.buscaTexto = it },
                 placeholder = { Text("Buscar produto...", color = Color.Gray, fontSize = 14.sp) },
                 modifier = Modifier.fillMaxWidth(),
                 leadingIcon = { Icon(Icons.Default.Search, null, tint = KhaliniGold) },
-                // Botão para limpar a busca se houver texto
                 trailingIcon = {
                     if (viewModel.buscaTexto.isNotEmpty()) {
                         IconButton(onClick = { viewModel.buscaTexto = "" }) {
@@ -122,10 +127,15 @@ fun PaginaControleEstoque() {
                     Text(mensagem, color = Color.Gray)
                 }
             } else {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
                     items(produtos) { produto ->
                         CardProdutoEstoque(produto)
                     }
+                    // Espaço extra no final para o bottomBar não cobrir o último item
+                    item { Spacer(modifier = Modifier.height(20.dp)) }
                 }
             }
         }
@@ -174,7 +184,12 @@ fun CardProdutoEstoque(produto: Produto) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("Qtd: ${produto.qtdeEstoque}", color = KhaliniGold, fontWeight = FontWeight.Bold)
-                Text("R$ ${produto.preco}", color = Color.White, fontSize = 14.sp)
+
+                Text(
+                    text = "R$ ${String.format("%.2f", produto.preco)}",
+                    color = Color.White,
+                    fontSize = 14.sp
+                )
             }
         }
     }

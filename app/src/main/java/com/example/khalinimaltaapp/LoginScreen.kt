@@ -22,10 +22,10 @@ import com.example.khalinimaltaapp.viewmodel.CadastroClienteViewModel
 @Composable
 fun LoginScreen(
     navController: NavController,
+    sharedViewModel: CadastroClienteViewModel, // Movido para cima (sem padrão)
     onIrParaCadastro: () -> Unit,
     onIrParaPaginaInicial: () -> Unit,
-    viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
-    sharedViewModel: CadastroClienteViewModel // ADICIONADO: Para salvar o nome do cliente logado
+    viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel() // Por último (com padrão)
 ) {
     val dourado = Color(0xFFC79E5E)
 
@@ -33,23 +33,23 @@ fun LoginScreen(
     LaunchedEffect(viewModel.irParaTrocaSenha) {
         if (viewModel.irParaTrocaSenha) {
             val id = viewModel.usuarioLogado?.id ?: 0
-            // Não limpamos campos aqui para não perder a referência do ID antes da navegação
             navController.navigate("troca_senha/$id")
             viewModel.irParaTrocaSenha = false
         }
     }
 
-    // 2. Direcionamento Inteligente
+    // 2. Direcionamento Inteligente (Ajustado conforme sugestão do João)
     LaunchedEffect(viewModel.irParaHome) {
         if (viewModel.irParaHome) {
-            if (viewModel.tipoUsuarioLogado == "ADMIN") {
+            // AGORA: Tanto ADMIN quanto FUNCIONARIO vão para a Home Principal
+            if (viewModel.tipoUsuarioLogado == "ADMIN" || viewModel.tipoUsuarioLogado == "FUNCIONARIO") {
                 onIrParaPaginaInicial()
             } else {
+                // Clientes comuns vão para categorias
                 navController.navigate("pagina_categorias") {
                     popUpTo("login") { inclusive = true }
                 }
             }
-            // Resetamos apenas os gatilhos de navegação, o nome permanece no sharedViewModel
             viewModel.irParaHome = false
         }
     }
@@ -71,7 +71,7 @@ fun LoginScreen(
         ) {
             Spacer(modifier = Modifier.height(160.dp))
 
-            // Usuário
+            // Campo Usuário
             OutlinedTextField(
                 value = viewModel.usuario,
                 onValueChange = { viewModel.usuario = it },
@@ -88,7 +88,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Senha
+            // Campo Senha
             OutlinedTextField(
                 value = viewModel.senha,
                 onValueChange = { viewModel.senha = it },
@@ -122,7 +122,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // BOTÃO ENTRAR - AGORA PASSA O SHAREDVIEWMODEL
+            // Botão Entrar
             Button(
                 onClick = { viewModel.fazerLogin(sharedViewModel) },
                 modifier = Modifier
@@ -154,6 +154,7 @@ fun LoginScreen(
         }
     }
 
+    // Dialogo de recuperação de senha
     if (viewModel.mostrarDialogo) {
         AlertDialog(
             onDismissRequest = { viewModel.mostrarDialogo = false },

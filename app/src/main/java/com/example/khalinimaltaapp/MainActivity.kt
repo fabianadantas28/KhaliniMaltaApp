@@ -108,14 +108,16 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                        composable(route = "home") {
+                        composable("home") {
+                            val relViewModel: RelatoriosViewModel = viewModel()
                             PaginaPrincipalKM(
                                 onAbrirMenu = { navController.navigate("menu") },
                                 onIrParaLogin = {
                                     navController.navigate("login") {
-                                        popUpTo("home") { inclusive = true }
+                                        popUpTo("home") { inclusive = true } // Isso limpa a memória ao sair
                                     }
-                                }
+                                },
+                                viewModel = relViewModel
                             )
                         }
 
@@ -171,8 +173,10 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
+                        // Dentro do seu NavHost { ... }
                         composable("controle_estoque") {
-                            PaginaControleEstoque()
+                            // PASSE o navController aqui para a seta de voltar funcionar
+                            PaginaControleEstoque(navController = navController)
                         }
 
                         composable(route = "lista_cliente") {

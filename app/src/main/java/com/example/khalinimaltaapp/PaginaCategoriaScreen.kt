@@ -65,7 +65,6 @@ fun PaginaCategoriaScreen(navController: NavController) {
                                 .fillMaxWidth()
                                 .aspectRatio(1.3f)
                                 .clickable {
-                                    // Navega enviando o nome da categoria como parâmetro
                                     navController.navigate("lista_produtos/${categoria.nome}")
                                 },
                             shape = RoundedCornerShape(10.dp),
@@ -87,14 +86,20 @@ fun PaginaCategoriaScreen(navController: NavController) {
                 }
             }
 
+            // BOTÃO ATUALIZADO: De "VOLTAR" para "FINALIZAR"
             OutlinedButton(
-                onClick = { navController.popBackStack() },
+                onClick = {
+                    // Navega para o login e limpa todo o histórico de telas
+                    navController.navigate("login") {
+                        popUpTo(0) // Remove todas as telas anteriores da pilha
+                    }
+                },
                 modifier = Modifier.fillMaxWidth(0.85f).height(42.dp),
                 border = BorderStroke(1.dp, CorOuroBorda),
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.Black.copy(alpha = 0.8f))
             ) {
-                Text("VOLTAR", color = CorOuroBorda, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text("FINALIZAR", color = CorOuroBorda, fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
             Spacer(modifier = Modifier.height(100.dp))
         }

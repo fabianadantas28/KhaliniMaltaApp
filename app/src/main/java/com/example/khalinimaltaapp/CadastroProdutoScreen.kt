@@ -8,6 +8,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -72,12 +74,7 @@ fun CadastroProdutoScreen(navController: NavController, viewModel: CadastroProdu
     val gap = 4.dp
 
     val categoriasOficiais = listOf(
-        "Anéis",
-        "Colares",
-        "Brincos",
-        "Pulseiras",
-        "Tornozeleiras",
-        "Acessórios"
+        "Anéis", "Colares", "Brincos", "Pulseiras", "Tornozeleiras", "Acessórios"
     )
     var menuExpandido by remember { mutableStateOf(false) }
 
@@ -96,7 +93,28 @@ fun CadastroProdutoScreen(navController: NavController, viewModel: CadastroProdu
                 .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(150.dp))
+            // AJUSTE AQUI: Aumentei para 80.dp para a seta descer e sair da barra de status
+            Spacer(modifier = Modifier.height(80.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start
+            ) {
+                IconButton(
+                    onClick = { navController.popBackStack() },
+                    modifier = Modifier.size(48.dp) // Área de toque maior e mais confortável
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Voltar",
+                        tint = CorOuroEnvelhecido,
+                        modifier = Modifier.size(32.dp) // Seta um pouco mais visível
+                    )
+                }
+            }
+
+            // Espaço entre a seta e o título "Cadastro Produto"
+            Spacer(modifier = Modifier.height(40.dp))
 
             Text(
                 text = "Cadastro Produto",
@@ -198,8 +216,6 @@ fun CadastroProdutoScreen(navController: NavController, viewModel: CadastroProdu
                     viewModel.salvarProduto(
                         onSucesso = {
                             Toast.makeText(context, "Produto salvo com sucesso!", Toast.LENGTH_SHORT).show()
-
-                            // CORREÇÃO AQUI: Rota limpa para o controle de estoque
                             navController.navigate("controle_estoque") {
                                 popUpTo("cadastro_produto") { inclusive = true }
                             }
