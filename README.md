@@ -1,6 +1,6 @@
 # KhaliniMaltaApp - Projeto de Gestão
 
-# Projeto de TI II - Etapa 2.
+# Projeto de TI II - Etapa 3.
 
 # Responsáveis Técnicos
 * Fabiana Maria Dantas da Silva RA 72200989
