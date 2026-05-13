@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 
 class CadastroProdutoViewModel(private val produtoDao: ProdutoDao) : ViewModel() {
 
-    // --- 1. ESTADOS PARA O FORMULÁRIO DE CADASTRO (O QUE VOCÊ DIGITA) ---
+    // --- 1. ESTADOS PARA O FORMULÁRIO ---
     var nome by mutableStateOf("")
     var marca by mutableStateOf("")
     var material by mutableStateOf("")
@@ -22,7 +22,10 @@ class CadastroProdutoViewModel(private val produtoDao: ProdutoDao) : ViewModel()
     var categoria by mutableStateOf("")
     var estoque by mutableStateOf("")
 
-    // --- 2. FUNÇÃO PARA SALVAR NOVO PRODUTO (ADMINISTRAÇÃO) ---
+    // NOVO: Estado para armazenar a URI da imagem selecionada
+    var imagemUriState by mutableStateOf<String?>(null)
+
+    // --- 2. FUNÇÃO PARA SALVAR NOVO PRODUTO ---
     fun salvarProduto(onSucesso: () -> Unit, onError: (String) -> Unit) {
         if (nome.isBlank() || categoria.isBlank() || preco.isBlank()) {
             onError("Preencha Nome, Categoria e Preço!")
@@ -40,7 +43,7 @@ class CadastroProdutoViewModel(private val produtoDao: ProdutoDao) : ViewModel()
                     categoria = categoria,
                     qtdeEstoque = estoque.toIntOrNull() ?: 0,
                     preco = preco.replace(",", ".").toDoubleOrNull() ?: 0.0,
-                    imagemUrl = ""
+                    imagemUri = imagemUriState // AGORA SALVA A URI REAL
                 )
 
                 produtoDao.inserir(novoProduto)
@@ -52,24 +55,18 @@ class CadastroProdutoViewModel(private val produtoDao: ProdutoDao) : ViewModel()
         }
     }
 
-    // --- 3. FUNÇÃO PARA A VITRINE (BUSCAR PRODUTOS PARA O CLIENTE) ---
-    // Esta função "conversa" com o DAO para trazer a lista filtrada
-    // No seu CadastroProdutoViewModel.kt, altere apenas esta parte:
-
-    // Antes era: fun getProdutosPorCategoria
-    // Agora coloque o nome que o João sugeriu para padronizar:
+    // --- 3. FUNÇÃO PARA A VITRINE ---
     fun buscarPorCategoria(categoriaNome: String): Flow<List<Produto>> {
         return produtoDao.buscarPorCategoria(categoriaNome)
     }
 
-    // --- 4. FUNÇÃO DE VENDA (DAR BAIXA NO ESTOQUE) ---
+    // --- 4. FUNÇÃO DE VENDA ---
     fun venderProduto(produto: Produto) {
         if (produto.qtdeEstoque > 0) {
             viewModelScope.launch {
                 val produtoAtualizado = produto.copy(
                     qtdeEstoque = produto.qtdeEstoque - 1
                 )
-                // Alterado para updateProduto para alinhar com o DAO novo
                 produtoDao.updateProduto(produtoAtualizado)
             }
         }
@@ -79,5 +76,6 @@ class CadastroProdutoViewModel(private val produtoDao: ProdutoDao) : ViewModel()
     private fun limparCampos() {
         nome = ""; marca = ""; material = ""; codigo = ""
         preco = ""; descricao = ""; categoria = ""; estoque = ""
+        imagemUriState = null // Limpa a foto também
     }
 }

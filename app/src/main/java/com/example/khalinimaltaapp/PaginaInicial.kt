@@ -31,8 +31,13 @@ fun PaginaPrincipalKM(
     onIrParaLogin: () -> Unit,
     viewModel: RelatoriosViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
-    val totalClientes by viewModel.totalClientes.collectAsState(initial = 0)
-    val valorTotalEstoque by viewModel.valorTotalEstoque.collectAsState(initial = 0.0)
+    // Coletando dados REAIS e atualizados do ViewModel
+    val totalClientes by viewModel.totalClientes.collectAsState()
+    val receitaTotal by viewModel.receitaTotal.collectAsState() // Melhor para "Vendas Mês"
+    val alertasEstoque by viewModel.produtosAlerta.collectAsState()
+
+    // USANDO O GRÁFICO DIÁRIO (Última Semana)
+    val dadosGraficoDiario by viewModel.dadosGraficoDiario.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -70,28 +75,27 @@ fun PaginaPrincipalKM(
 
             Spacer(modifier = Modifier.height(15.dp))
 
-            // SEÇÃO DE CARDS IGUAL À FIGURA
-            // Resumo do Dia com design fiel à imagem
+            // CARDS COM DADOS REAIS
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // 1. Vendas Mês (Valor Real do Estoque)
+                // 1. Receita Total acumulada
                 CardAtivoHome(
                     titulo = "Vendas\nMês",
-                    valor = "R$ ${"%.2f".format(valorTotalEstoque)}",
+                    valor = "R$ ${"%.2f".format(receitaTotal)}",
                     modifier = Modifier.weight(1f)
                 )
 
-                // 2. Alertas Estoque (Seta para baixo em Dourado)
+                // 2. Alertas Estoque (INTEGRADO - Mostra itens com 1 a 5 unidades)
                 CardAtivoHome(
                     titulo = "Alertas\nEstoque",
-                    mostrarSeta = true, // Ativa a seta nativa
-                    valor = "3",
+                    mostrarSeta = true,
+                    valor = alertasEstoque.toString(),
                     modifier = Modifier.weight(1f)
                 )
 
-                // 3. Novos Clientes (Contagem Real)
+                // 3. Novos Clientes (Contagem total do banco)
                 CardAtivoHome(
                     titulo = "Novos\nClientes",
                     valor = "$totalClientes",
@@ -107,7 +111,7 @@ fun PaginaPrincipalKM(
                 fontSize = 13.sp
             )
 
-            // GRÁFICO
+            // GRÁFICO DIÁRIO (7 barras)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -122,17 +126,18 @@ fun PaginaPrincipalKM(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.Bottom
                 ) {
-                    val vendasSemana = listOf(0.4f, 0.9f, 0.5f, 0.7f, 0.6f, 0.8f, 0.3f)
-                    val dias = listOf("S", "T", "Q", "Q", "S", "S", "D")
-                    vendasSemana.forEachIndexed { index, peso ->
+                    // Mapeando os dados do gráfico diário
+                    dadosGraficoDiario.forEachIndexed { index, peso ->
                         Box(
                             modifier = Modifier
                                 .width(10.dp)
                                 .fillMaxHeight(peso)
                                 .background(
                                     brush = Brush.verticalGradient(
-                                        colors = if (index == 1) listOf(CorOuroPrincipalHome, Color.White)
-                                        else listOf(CorOuroPrincipalHome.copy(alpha = 0.3f), Color.Transparent)
+                                        colors = if (index == dadosGraficoDiario.lastIndex)
+                                            listOf(CorOuroPrincipalHome, Color.White)
+                                        else
+                                            listOf(CorOuroPrincipalHome.copy(alpha = 0.3f), Color.Transparent)
                                     ),
                                     shape = RoundedCornerShape(50)
                                 )
@@ -156,6 +161,7 @@ fun PaginaPrincipalKM(
     }
 }
 
+// Composable de suporte (CardAtivoHome e BotaoHome permanecem com o design original)
 @Composable
 fun CardAtivoHome(titulo: String, valor: String, modifier: Modifier, mostrarSeta: Boolean = false) {
     Surface(

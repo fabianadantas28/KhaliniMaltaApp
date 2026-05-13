@@ -3,10 +3,10 @@ package com.example.khalinimaltaapp.data
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "produtos") // Isso avisa ao Room que é uma tabela
+@Entity(tableName = "produtos")
 data class Produto(
     @PrimaryKey(autoGenerate = true)
-    val id: Int = 0, // O banco gera o ID automático (1, 2, 3...)
+    val id: Int = 0,
     val nomeProduto: String = "",
     val marca: String = "",
     val material: String = "",
@@ -15,5 +15,5 @@ data class Produto(
     val categoria: String = "",
     val qtdeEstoque: Int = 0,
     val preco: Double = 0.0,
-    val imagemUrl: String = ""
+    val imagemUri: String? = null // Usamos String? para aceitar produtos sem foto e "Uri" por ser caminho local
 )

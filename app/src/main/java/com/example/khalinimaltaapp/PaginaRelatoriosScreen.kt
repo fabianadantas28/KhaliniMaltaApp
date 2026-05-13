@@ -27,24 +27,24 @@ fun PaginaRelatorio(
     onVoltar: () -> Unit = {},
     viewModel: RelatoriosViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
-    // Dados trazidos pelo João (Vendas)
-    val totalVendas by viewModel.totalVendas.collectAsState(initial = 0)
-    val receitaTotal by viewModel.receitaTotal.collectAsState(initial = 0.0)
-    val produtoMaisVendido by viewModel.produtoMaisVendido.collectAsState(initial = "---")
-    val formaPagamentoMaisUsada by viewModel.formaPagamentoMaisUsada.collectAsState(initial = "---")
+    // Coletando os dados do ViewModel (Vendas, Estoque e Clientes)
+    val totalVendas by viewModel.totalVendas.collectAsState()
+    val receitaTotal by viewModel.receitaTotal.collectAsState()
+    val produtoMaisVendido by viewModel.produtoMaisVendido.collectAsState()
+    val formaPagamentoMaisUsada by viewModel.formaPagamentoMaisUsada.collectAsState()
+    val totalProdutos by viewModel.totalProdutos.collectAsState()
+    val totalClientes by viewModel.totalClientes.collectAsState()
+    val valorTotalEstoque by viewModel.valorTotalEstoque.collectAsState()
+    val ticketMedio by viewModel.ticketMedio.collectAsState()
 
-    // Seus dados (Estoque e Clientes)
-    val totalProdutos by viewModel.totalProdutos.collectAsState(initial = 0)
-    val totalClientes by viewModel.totalClientes.collectAsState(initial = 0)
-    val valorTotalEstoque by viewModel.valorTotalEstoque.collectAsState(initial = 0.0)
-    val totalItensEstoque by viewModel.totalItensEstoque.collectAsState(initial = 0)
-    val ticketMedio by viewModel.ticketMedio.collectAsState(initial = 0.0)
+    // NOVO: Coletando os dados reais do gráfico mensal (semestre)
+    val dadosMensais by viewModel.dadosGraficoMensal.collectAsState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
-            .verticalScroll(rememberScrollState()) // Adicionado scroll para caber tudo
+            .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
         // Header
@@ -62,7 +62,7 @@ fun PaginaRelatorio(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // SEÇÃO 1: VENDAS (Novidade do João)
+        // SEÇÃO 1: VENDAS
         SecaoTitulo("📊 Resumo de Vendas")
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             CardInfo("Receita Total", "R$ ${"%.2f".format(receitaTotal)}", Modifier.weight(1.1f))
@@ -87,8 +87,8 @@ fun PaginaRelatorio(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // SEÇÃO 3: SEU GRÁFICO (O diferencial visual)
-        GraficoVendas()
+        // SEÇÃO 3: GRÁFICO (AGORA REAL E MENSAL)
+        GraficoVendas(dadosMensais)
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -121,7 +121,7 @@ fun CardInfo(titulo: String, valor: String, modifier: Modifier) {
 }
 
 @Composable
-fun GraficoVendas() {
+fun GraficoVendas(pesos: List<Float>) { // Agora recebe a lista real do banco
     Card(
         modifier = Modifier.fillMaxWidth().height(200.dp),
         colors = CardDefaults.cardColors(containerColor = CardDarkBlue),
@@ -130,11 +130,21 @@ fun GraficoVendas() {
         Column(modifier = Modifier.padding(16.dp)) {
             Text("Evolução de Vendas (Semestre)", color = KhaliniGold, fontWeight = FontWeight.Bold, fontSize = 12.sp)
             Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.Bottom) {
-                val pesos = listOf(0.3f, 0.5f, 0.4f, 0.7f, 0.9f, 0.6f)
+
                 val meses = listOf("Jan", "Fev", "Mar", "Abr", "Mai", "Jun")
+
                 pesos.forEachIndexed { index, peso ->
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Box(modifier = Modifier.width(20.dp).fillMaxHeight(peso).background(if(index == 4) KhaliniGold else KhaliniGold.copy(alpha = 0.3f), RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)))
+                        Box(
+                            modifier = Modifier
+                                .width(20.dp)
+                                .fillMaxHeight(peso)
+                                .background(
+                                    // Destaca a última barra (mês atual) com cor sólida
+                                    if(index == pesos.lastIndex) KhaliniGold else KhaliniGold.copy(alpha = 0.3f),
+                                    RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
+                                )
+                        )
                         Text(meses[index], color = Color.Gray, fontSize = 9.sp)
                     }
                 }

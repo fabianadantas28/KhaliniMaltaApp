@@ -1,25 +1,38 @@
 package com.example.khalinimaltaapp
 
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
+import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.khalinimaltaapp.viewmodel.CadastroProdutoViewModel
+import com.example.khalinimaltaapp.data.Produto
+
+val CorOuroBordaLista = Color(0xFFC79E5E)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,18 +55,14 @@ fun ListaProdutosScreen(
             containerColor = Color.Transparent,
             topBar = {
                 Column {
-                    Spacer(modifier = Modifier.height(100.dp))
+                    Spacer(modifier = Modifier.height(60.dp))
                     CenterAlignedTopAppBar(
                         title = {
-                            Text(
-                                categoriaSelecionada.uppercase(),
-                                color = CorOuroBorda,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Text(categoriaSelecionada.uppercase(), color = CorOuroBordaLista, fontWeight = FontWeight.Bold)
                         },
                         navigationIcon = {
                             IconButton(onClick = { navController.popBackStack() }) {
-                                Icon(Icons.Default.ArrowBack, contentDescription = "Voltar", tint = CorOuroBorda)
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = CorOuroBordaLista)
                             }
                         },
                         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
@@ -68,68 +77,102 @@ fun ListaProdutosScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.padding(paddingValues).padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    item { Spacer(modifier = Modifier.height(100.dp)) }
-
+                    // O segredo está aqui: chamamos um componente menor para cada item
                     items(produtos) { produto ->
                         if (produto.qtdeEstoque > 0) {
-                            // ESTADO PARA CONTROLAR A QUANTIDADE DESTE PRODUTO ESPECÍFICO
-                            var quantidadeSelecionada by remember { mutableIntStateOf(1) }
-
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(10.dp),
-                                border = BorderStroke(1.dp, CorOuroBorda),
-                                colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.6f))
-                            ) {
-                                Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(produto.nomeProduto, color = Color.White, fontWeight = FontWeight.Bold)
-                                        Text("R$ ${String.format("%.2f", produto.preco)}", color = CorOuroBorda)
-                                        Text("Estoque: ${produto.qtdeEstoque}", color = Color.LightGray, fontSize = 12.sp)
-
-                                        // --- SELETOR DE QUANTIDADE ---
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            modifier = Modifier.padding(top = 8.dp)
-                                        ) {
-                                            IconButton(
-                                                onClick = { if (quantidadeSelecionada > 1) quantidadeSelecionada-- },
-                                                modifier = Modifier.size(30.dp)
-                                            ) {
-                                                Text("-", color = CorOuroBorda, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                                            }
-
-                                            Text(
-                                                text = quantidadeSelecionada.toString(),
-                                                color = Color.White,
-                                                modifier = Modifier.padding(horizontal = 8.dp)
-                                            )
-
-                                            IconButton(
-                                                onClick = { if (quantidadeSelecionada < produto.qtdeEstoque) quantidadeSelecionada++ },
-                                                modifier = Modifier.size(30.dp)
-                                            ) {
-                                                Text("+", color = CorOuroBorda, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                                            }
-                                        }
-                                    }
-
-                                    Button(
-                                        onClick = {
-                                            // AGORA ENVIAMOS TAMBÉM A QUANTIDADE NA ROTA
-                                            navController.navigate("vendas?produtoNome=${produto.nomeProduto}&preco=${produto.preco}&quantidade=${quantidadeSelecionada}")
-                                        },
-                                        colors = ButtonDefaults.buttonColors(containerColor = CorOuroBorda)
-                                    ) {
-                                        Text("COMPRAR", color = Color.Black, fontWeight = FontWeight.Bold)
-                                    }
-                                }
-                            }
+                            ItemProdutoCard(produto, navController)
                         }
                     }
+                    item { Spacer(modifier = Modifier.height(30.dp)) }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun ItemProdutoCard(produto: Produto, navController: NavController) {
+    val context = LocalContext.current
+    var quantidadeSelecionada by remember { mutableIntStateOf(1) }
+    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+
+    // Carrega a imagem de forma segura
+    LaunchedEffect(produto.imagemUri) {
+        if (!produto.imagemUri.isNullOrEmpty()) {
+            try {
+                val uri = Uri.parse(produto.imagemUri)
+                bitmap = if (Build.VERSION.SDK_INT < 28) {
+                    MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+                } else {
+                    val source = ImageDecoder.createSource(context.contentResolver, uri)
+                    ImageDecoder.decodeBitmap(source)
+                }
+            } catch (e: Exception) {
+                bitmap = null
+            }
+        }
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(10.dp),
+        border = BorderStroke(1.dp, CorOuroBordaLista),
+        colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.7f))
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // FOTO
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .border(1.dp, CorOuroBordaLista.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(8.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                if (bitmap != null) {
+                    Image(
+                        bitmap = bitmap!!.asImageBitmap(),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(Icons.Default.Image, "Sem foto", tint = CorOuroBordaLista.copy(alpha = 0.3f), modifier = Modifier.size(40.dp))
+                }
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // TEXTOS E PREÇO
+            Column(modifier = Modifier.weight(1f)) {
+                Text(produto.nomeProduto, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text("R$ ${String.format("%.2f", produto.preco)}", color = CorOuroBordaLista)
+
+                // Quantidade
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = { if (quantidadeSelecionada > 1) quantidadeSelecionada-- }, modifier = Modifier.size(24.dp)) {
+                        Text("-", color = CorOuroBordaLista, fontSize = 20.sp)
+                    }
+                    Text(text = quantidadeSelecionada.toString(), color = Color.White, modifier = Modifier.padding(horizontal = 8.dp))
+                    IconButton(onClick = { if (quantidadeSelecionada < produto.qtdeEstoque) quantidadeSelecionada++ }, modifier = Modifier.size(24.dp)) {
+                        Text("+", color = CorOuroBordaLista, fontSize = 20.sp)
+                    }
+                }
+            }
+
+            // BOTÃO
+            Button(
+                onClick = {
+                    navController.navigate("vendas?produtoNome=${produto.nomeProduto}&preco=${produto.preco}&quantidade=${quantidadeSelecionada}")
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = CorOuroBordaLista),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text("COMPRAR", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 11.sp)
             }
         }
     }
