@@ -82,12 +82,19 @@ fun CadastroProdutoScreen(navController: NavController, viewModel: CadastroProdu
         imageUri?.let {
             try {
                 bitmap = if (Build.VERSION.SDK_INT < 28) {
+                    @Suppress("DEPRECATION")
                     MediaStore.Images.Media.getBitmap(context.contentResolver, it)
                 } else {
                     val source = ImageDecoder.createSource(context.contentResolver, it)
-                    ImageDecoder.decodeBitmap(source)
+                    ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
+                        // Força o Android a processar via Software, evitando quebra em aparelhos novos
+                        decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+                        decoder.isMutableRequired = true
+                    }
                 }
-            } catch (e: Exception) { e.printStackTrace() }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
     // ------------------------------
@@ -170,7 +177,7 @@ fun CadastroProdutoScreen(navController: NavController, viewModel: CadastroProdu
                     CampoProduto(label = "Categoria", value = viewModel.categoria, onValueChange = {}, readOnly = true,
                         trailingIcon = {
                             IconButton(onClick = { menuExpandido = true }) {
-                                Icon(painterResource(id = android.R.drawable.arrow_down_float), null, tint = CorOuroEnvelhecido)
+                                Icon(imageVector = Icons.Default.AddAPhoto, null, tint = CorOuroEnvelhecido)
                             }
                         }
                     )

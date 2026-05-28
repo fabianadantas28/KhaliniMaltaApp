@@ -1,6 +1,7 @@
 package com.example.khalinimaltaapp
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.getValue
@@ -25,50 +26,72 @@ class MainActivity : ComponentActivity() {
             KhaliniMaltaAppTheme {
                 val navController = rememberNavController()
                 val context = LocalContext.current
-                val db = AppDatabase.getDatabase(context)
 
-                // 1. O ViewModel Compartilhado (Dono do nome do cliente)
-                val sharedViewModel: CadastroClienteViewModel = viewModel()
+                // Inicialização segura do Banco de Dados com tratamento de erro
+                val db = try {
+                    AppDatabase.getDatabase(context)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    Toast.makeText(context, "Erro ao carregar banco de dados. Limpe os dados do app.", Toast.LENGTH_LONG).show()
+                    null
+                }
 
-                // 2. O ViewModel de Vendas
-                val vendaViewModel: RegistroVendaViewModel = viewModel(
-                    factory = object : ViewModelProvider.Factory {
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                            @Suppress("UNCHECKED_CAST")
-                            return RegistroVendaViewModel(db.produtoDao(), db.vendaDao()) as T
-                        }
-                    }
-                )
+                // Se o banco falhar, não tentamos renderizar os ViewModels que dependem dele para evitar o crash
+                if (db != null) {
 
-                val vendaFinalizada = vendaViewModel.vendaRealizadaParaRecibo
+                    val sharedViewModel: CadastroClienteViewModel = viewModel()
 
-                if (vendaFinalizada != null) {
-                    ReciboScreen(
-                        venda = vendaFinalizada,
-                        onFinalizar = {
-                            vendaViewModel.limparRecibo()
-                            navController.navigate("pagina_categorias") {
-                                popUpTo(0) { inclusive = true }
-                                launchSingleTop = true
+                    val vendaViewModel: RegistroVendaViewModel = viewModel(
+                        factory = object : ViewModelProvider.Factory {
+                            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                @Suppress("UNCHECKED_CAST")
+                                return RegistroVendaViewModel(db.produtoDao(), db.vendaDao()) as T
                             }
                         }
                     )
-                } else {
+
+                    // Verificação de recibo movida para um LaunchedEffect ou observador interno seria o ideal,
+                    // mas mantendo sua lógica estável, garantimos que o NavHost inicialize primeiro.
                     NavHost(navController = navController, startDestination = "splash") {
 
                         composable(route = "splash") {
-                            SplashScreen(onTimeout = {
-                                navController.navigate("login") {
+                            // Se houver uma venda pendente de recibo, redireciona direto
+                            if (vendaViewModel.vendaRealizadaParaRecibo != null) {
+                                navController.navigate("recibo_tela") {
                                     popUpTo("splash") { inclusive = true }
                                 }
-                            })
+                            } else {
+                                SplashScreen(onTimeout = {
+                                    navController.navigate("login") {
+                                        popUpTo("splash") { inclusive = true }
+                                    }
+                                })
+                            }
                         }
 
-                        // CONSERTO AQUI: Passando o sharedViewModel para a LoginScreen
+                        // ROTA DO RECIBO REORGANIZADA DE FORMA SEGURA
+                        composable(route = "recibo_tela") {
+                            val vendaFinalizada = vendaViewModel.vendaRealizadaParaRecibo
+                            if (vendaFinalizada != null) {
+                                ReciboScreen(
+                                    venda = vendaFinalizada,
+                                    onFinalizar = {
+                                        vendaViewModel.limparRecibo()
+                                        navController.navigate("pagina_categorias") {
+                                            popUpTo(0) { inclusive = true }
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                )
+                            } else {
+                                navController.navigate("home") { popUpTo(0) { inclusive = true } }
+                            }
+                        }
+
                         composable(route = "login") {
                             LoginScreen(
                                 navController = navController,
-                                sharedViewModel = sharedViewModel, // ESSA LINHA CONSERTA O ERRO DO NOME
+                                sharedViewModel = sharedViewModel,
                                 onIrParaPaginaInicial = { navController.navigate("home") },
                                 onIrParaCadastro = { navController.navigate("cadastro_cliente") }
                             )
@@ -114,7 +137,7 @@ class MainActivity : ComponentActivity() {
                                 onAbrirMenu = { navController.navigate("menu") },
                                 onIrParaLogin = {
                                     navController.navigate("login") {
-                                        popUpTo("home") { inclusive = true } // Isso limpa a memória ao sair
+                                        popUpTo("home") { inclusive = true }
                                     }
                                 },
                                 viewModel = relViewModel
@@ -125,7 +148,7 @@ class MainActivity : ComponentActivity() {
                             MenuScreen(
                                 onNavegar = { rota -> navController.navigate(rota) },
                                 onLogout = {
-                                    sharedViewModel.limparParaSair() // Use o nome exato da função do seu ViewModel
+                                    sharedViewModel.limparParaSair()
                                     navController.navigate("login") {
                                         popUpTo("home") { inclusive = true }
                                     }
@@ -173,9 +196,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                        // Dentro do seu NavHost { ... }
                         composable("controle_estoque") {
-                            // PASSE o navController aqui para a seta de voltar funcionar
                             PaginaControleEstoque(navController = navController)
                         }
 
@@ -236,6 +257,7 @@ class MainActivity : ComponentActivity() {
                             val gvViewModel: GestaoVendasViewModel = viewModel(
                                 factory = object : ViewModelProvider.Factory {
                                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                        @Suppress("UNCHECKED_CAST")
                                         return GestaoVendasViewModel(db.vendaDao()) as T
                                     }
                                 }
