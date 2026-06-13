@@ -1,22 +1,19 @@
 package com.example.khalinimaltaapp.viewmodel
 
-import android.app.Application
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.khalinimaltaapp.data.Cliente
-import com.example.khalinimaltaapp.data.database.AppDatabase
+import com.example.khalinimaltaapp.data.dao.ClienteDao
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class CadastroClienteViewModel(application: Application) : AndroidViewModel(application) {
+class CadastroClienteViewModel(private val clienteDao: ClienteDao) : ViewModel() {
 
-    private val clienteDao = AppDatabase.getDatabase(application).clienteDao()
-
-    // Variáveis de estado
+    // Variáveis estáveis usando o 'by' correto do Kotlin
     var nome by mutableStateOf("")
     var sobrenome by mutableStateOf("")
     var dataNasc by mutableStateOf("")
@@ -28,15 +25,11 @@ class CadastroClienteViewModel(application: Application) : AndroidViewModel(appl
     var senha by mutableStateOf("")
     var confirmarSenha by mutableStateOf("")
 
-    // --- NOVA FUNÇÃO PARA CONSERTAR O ERRO NA MAINACTIVITY ---
-    fun atualizarNome(novoNome: String) {
-        nome = novoNome
-    }
-
     fun salvarNoBanco() {
         if (senha == confirmarSenha && senha.isNotEmpty()) {
             viewModelScope.launch(Dispatchers.IO) {
                 try {
+                    // Mapeia os dados da tela para as colunas exatas da entidade Cliente
                     val novoCliente = Cliente(
                         nome = nome,
                         sobrenome = sobrenome,
@@ -46,22 +39,17 @@ class CadastroClienteViewModel(application: Application) : AndroidViewModel(appl
                         email = email,
                         senha = senha
                     )
-                    clienteDao.inserir(novoCliente)
-                    Log.d("DB_SUCCESS", "Cliente ${novoCliente.nome} salvo com sucesso!")
 
-                    // Limpa apenas dados de senha após cadastro
-                    senha = ""
-                    confirmarSenha = ""
+                    clienteDao.inserir(novoCliente)
+                    Log.d("DB_SUCCESS", "Cliente ${novoCliente.nome} cadastrado com sucesso!")
+
                 } catch (e: Exception) {
-                    Log.e("DB_ERROR", "Erro ao inserir cliente: ${e.message}")
+                    Log.e("DB_ERROR", "Erro ao inserir no banco: ${e.message}")
                 }
             }
         }
     }
 
-    /**
-     * Função chamada no Logout pela MainActivity
-     */
     fun limparParaSair() {
         nome = ""
         sobrenome = ""

@@ -22,10 +22,10 @@ import com.example.khalinimaltaapp.viewmodel.CadastroClienteViewModel
 @Composable
 fun LoginScreen(
     navController: NavController,
-    sharedViewModel: CadastroClienteViewModel, // Movido para cima (sem padrão)
+    sharedViewModel: CadastroClienteViewModel,
     onIrParaCadastro: () -> Unit,
     onIrParaPaginaInicial: () -> Unit,
-    viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel() // Por último (com padrão)
+    viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val dourado = Color(0xFFC79E5E)
 
@@ -38,14 +38,12 @@ fun LoginScreen(
         }
     }
 
-    // 2. Direcionamento Inteligente (Ajustado conforme sugestão do João)
+    // 2. Direcionamento Inteligente
     LaunchedEffect(viewModel.irParaHome) {
         if (viewModel.irParaHome) {
-            // AGORA: Tanto ADMIN quanto FUNCIONARIO vão para a Home Principal
             if (viewModel.tipoUsuarioLogado == "ADMIN" || viewModel.tipoUsuarioLogado == "FUNCIONARIO") {
                 onIrParaPaginaInicial()
             } else {
-                // Clientes comuns vão para categorias
                 navController.navigate("pagina_categorias") {
                     popUpTo("login") { inclusive = true }
                 }
@@ -122,9 +120,13 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Botão Entrar
+            // --- SUBSTITUA APENAS O BOTÃO ENTRAR NA SUA LOGINSCREEN.KT ---
+
             Button(
-                onClick = { viewModel.fazerLogin(sharedViewModel) },
+                onClick = {
+                    // Chamada direta e limpa sem o try/catch que mascarava o erro
+                    viewModel.fazerLogin(sharedViewModel)
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
@@ -154,7 +156,6 @@ fun LoginScreen(
         }
     }
 
-    // Dialogo de recuperação de senha
     if (viewModel.mostrarDialogo) {
         AlertDialog(
             onDismissRequest = { viewModel.mostrarDialogo = false },

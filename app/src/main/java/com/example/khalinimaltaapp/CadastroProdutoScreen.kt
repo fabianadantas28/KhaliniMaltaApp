@@ -1,5 +1,6 @@
 package com.example.khalinimaltaapp
 
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
@@ -38,6 +39,7 @@ import androidx.navigation.NavController
 import com.example.khalinimaltaapp.viewmodel.CadastroProdutoViewModel
 
 val CorOuroEnvelhecido = Color(0xFFC79E5E)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CampoProduto(
@@ -70,13 +72,26 @@ fun CadastroProdutoScreen(navController: NavController, viewModel: CadastroProdu
     val context = LocalContext.current
     val gap = 4.dp
 
-    // --- LÓGICA DE IMAGEM ATIVA ---
+    // --- LÓGICA DE IMAGEM ATIVA E CORRIGIDA ---
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? -> imageUri = uri }
+    ) { uri: Uri? ->
+        if (uri != null) {
+            imageUri = uri
+            try {
+                // EXTREMAMENTE IMPORTANTE: Solicita permissão permanente de leitura para essa imagem
+                val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                context.contentResolver.takePersistableUriPermission(uri, takeFlags)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            // Repassa a String da URI diretamente para o seu ViewModel salvar no Banco de Dados Room
+            viewModel.imagemUriState = uri.toString()
+        }
+    }
 
     LaunchedEffect(imageUri) {
         imageUri?.let {
@@ -87,7 +102,6 @@ fun CadastroProdutoScreen(navController: NavController, viewModel: CadastroProdu
                 } else {
                     val source = ImageDecoder.createSource(context.contentResolver, it)
                     ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
-                        // Força o Android a processar via Software, evitando quebra em aparelhos novos
                         decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
                         decoder.isMutableRequired = true
                     }
@@ -97,9 +111,9 @@ fun CadastroProdutoScreen(navController: NavController, viewModel: CadastroProdu
             }
         }
     }
-    // ------------------------------
+    // ------------------------------------------
 
-    val categoriasOficiais = listOf("Anéis", "Colares", "Brincos", "Pulseiras", "Tornozeleiras", "Acessórios")
+    val categoriesOficiais = listOf("Anéis", "Colares", "Brincos", "Pulseiras", "Tornozeleiras", "Acessórios")
     var menuExpandido by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -124,7 +138,7 @@ fun CadastroProdutoScreen(navController: NavController, viewModel: CadastroProdu
 
             Text(text = "Cadastro Produto", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
 
-            // QUADRADO DA FOTO (AGORA CLICÁVEL E ATIVO)
+            // QUADRADO DA FOTO (CLICÁVEL E ATIVO)
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
                 Box(
                     modifier = Modifier
@@ -132,7 +146,7 @@ fun CadastroProdutoScreen(navController: NavController, viewModel: CadastroProdu
                         .size(85.dp)
                         .border(1.5.dp, CorOuroEnvelhecido, RoundedCornerShape(8.dp))
                         .clip(RoundedCornerShape(8.dp))
-                        .clickable { launcher.launch("image/*") }, // ABRE A GALERIA
+                        .clickable { launcher.launch("image/*") },
                     contentAlignment = Alignment.Center
                 ) {
                     if (bitmap != null) {
@@ -182,7 +196,7 @@ fun CadastroProdutoScreen(navController: NavController, viewModel: CadastroProdu
                         }
                     )
                     DropdownMenu(expanded = menuExpandido, onDismissRequest = { menuExpandido = false }, modifier = Modifier.fillMaxWidth(0.5f)) {
-                        categoriasOficiais.forEach { nomeCat ->
+                        categoriesOficiais.forEach { nomeCat ->
                             DropdownMenuItem(text = { Text(nomeCat) }, onClick = { viewModel.categoria = nomeCat; menuExpandido = false })
                         }
                     }

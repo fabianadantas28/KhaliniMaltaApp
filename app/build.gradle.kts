@@ -52,4 +52,10 @@ dependencies {
 
     // ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+
+    // CARREGAMENTO DE IMAGENS (COIL) - Adicionado para renderizar as fotos dos produtos
+    implementation("io.coil-kt:coil-compose:2.6.0")
+
+    // ... mantenha as outras dependências e altere a do coil para:
+    implementation(libs.coil.compose)
 }

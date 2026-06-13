@@ -59,6 +59,7 @@ fun MenuAdministracaoScreen(
             Spacer(modifier = Modifier.height(25.dp))
 
             Box(modifier = Modifier.weight(1f)) {
+                // LISTA ATUALIZADA COM OS DOIS BOTÕES SEPARADOS
                 val itensAdmin = listOf(
                     MenuItemData("Clientes", Icons.Default.Person, "lista_cliente"),
                     MenuItemData("Cadastrar Produto", Icons.Default.Add, "cadastro_produto"),
@@ -66,14 +67,16 @@ fun MenuAdministracaoScreen(
                     MenuItemData("Estoque Atual", Icons.Default.Build, "controle_estoque"),
                     MenuItemData("Repor Estoque", Icons.Default.Refresh, "entrada_estoque"),
                     MenuItemData("Relatórios", Icons.Default.Info, "relatorios"),
-                    MenuItemData("Usuários", Icons.Default.AccountBox, "cadastro_usuario")
+                    MenuItemData("Lista Funcionários", Icons.Default.AccountBox, "lista_funcionarios"),
+                    MenuItemData("Novo Funcionário", Icons.Default.Create, "cadastro_usuario"),
+
                 )
 
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 25.dp), // Aumentei aqui para as caixas "encolherem" para o centro
+                        .padding(horizontal = 25.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {

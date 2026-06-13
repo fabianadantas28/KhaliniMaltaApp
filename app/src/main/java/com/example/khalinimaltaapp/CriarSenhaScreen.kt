@@ -19,18 +19,17 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
-// IMPORTANTE: Importando o ViewModel que agora faz tudo
 import com.example.khalinimaltaapp.viewmodel.CadastroClienteViewModel
 import com.example.khalinimaltaapp.ui.theme.KhaliniMaltaAppTheme
 
 @Composable
 fun CriarSenhaScreen(
     onFinalizar: () -> Unit,
-    viewModel: CadastroClienteViewModel // Agora usando o motor compartilhado!
+    viewModel: CadastroClienteViewModel
 ) {
     val dourado = Color(0xFFD4AF37)
     val scrollState = rememberScrollState()
-    var senhaErro by remember { mutableStateOf(false) } // Adicione esta linha
+    var senhaErro by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -48,6 +47,8 @@ fun CriarSenhaScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            Spacer(modifier = Modifier.height(40.dp))
+
             Text(
                 text = "Cadastro Senha",
                 color = dourado,
@@ -56,9 +57,13 @@ fun CriarSenhaScreen(
                 modifier = Modifier.padding(bottom = 40.dp)
             )
 
+            // Modificando diretamente as propriedades de senha do seu ViewModel comum
             CustomTextField(
                 valor = viewModel.senha,
-                aoMudar = { viewModel.senha = it },
+                aoMudar = {
+                    viewModel.senha = it
+                    senhaErro = false
+                },
                 label = "Digite sua Senha",
                 corDourada = dourado,
                 isSenha = true
@@ -68,12 +73,15 @@ fun CriarSenhaScreen(
 
             CustomTextField(
                 valor = viewModel.confirmarSenha,
-                aoMudar = { viewModel.confirmarSenha = it },
+                aoMudar = {
+                    viewModel.confirmarSenha = it
+                    senhaErro = false
+                },
                 label = "Confirmar Senha",
                 corDourada = dourado,
                 isSenha = true
             )
-            // ADICIONEI ESTE BLOCO AQUI:
+
             if (senhaErro) {
                 Text(
                     text = "As senhas não coincidem ou estão vazias.",
@@ -85,21 +93,18 @@ fun CriarSenhaScreen(
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            Spacer(modifier = Modifier.height(40.dp))
-
             Button(
                 onClick = {
-                    // 1. Verificamos se as senhas batem antes de tentar salvar
+                    // 1. Verifica se as senhas batem e não estão em branco
                     if (viewModel.senha.isNotEmpty() && viewModel.senha == viewModel.confirmarSenha) {
 
-                        // 2. Chama a função que grava no SQLite
+                        // 2. Dispara a função de salvar no SQLite (com todos os dados juntos)
                         viewModel.salvarNoBanco()
 
-                        // 3. Navega para o Login
+                        // 3. Executa o callback que volta para o login
                         onFinalizar()
-
                     } else {
-                        senhaErro = true // ATIVA O ERRO AQUI!
+                        senhaErro = true
                     }
                 },
                 modifier = Modifier

@@ -8,15 +8,14 @@ import com.example.khalinimaltaapp.data.dao.ClienteDao
 import com.example.khalinimaltaapp.data.Usuario
 import com.example.khalinimaltaapp.data.dao.UsuarioDao
 import com.example.khalinimaltaapp.data.Cliente
-import com.example.khalinimaltaapp.data.Produto // Garanta que este import existe
+import com.example.khalinimaltaapp.data.Produto
 import com.example.khalinimaltaapp.data.dao.ProdutoDao
-import com.example.khalinimaltaapp.data.Venda //
+import com.example.khalinimaltaapp.data.Venda
 import com.example.khalinimaltaapp.data.dao.VendaDao
 
-// ADICIONEI O Produto::class AQUI ABAIXO:
 @Database(
     entities = [Usuario::class, Cliente::class, Produto::class, Venda::class],
-    version = 5,  // era 4, agora é 5
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -35,8 +34,11 @@ abstract class AppDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "khalini_database"
+                    "khalini_database_v5"
                 )
+                    // Configuração Crítica: Força o banco a fechar os arquivos temporários -wal e -shm.
+                    // Isso evita conexões abertas que acionam o congelamento do sistema operacional da Samsung.
+                    .setJournalMode(JournalMode.TRUNCATE)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

@@ -41,9 +41,11 @@ class RegistroVendaViewModel(
     fun adicionarAoCarrinho(nome: String, preco: String, qtd: Int) {
         if (nome.isEmpty()) return
 
-        val precoDouble = preco.toDoubleOrNull() ?: 0.0
-        val listaAtual = _itensCarrinho.value.toMutableList()
+        // CORREÇÃO: Limpa espaços e troca a vírgula por ponto para o Kotlin aceitar o número
+        val precoLimpo = preco.trim().replace(",", ".")
+        val precoDouble = precoLimpo.toDoubleOrNull() ?: 0.0
 
+        val listaAtual = _itensCarrinho.value.toMutableList()
         val itemExistente = listaAtual.find { it.nome == nome }
 
         if (itemExistente != null) {

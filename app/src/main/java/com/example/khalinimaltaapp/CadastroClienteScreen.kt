@@ -18,19 +18,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.khalinimaltaapp.viewmodel.CadastroClienteViewModel
 
 @Composable
 fun CadastroClienteScreen(
-    onContinuar: () -> Unit,
+    navController: NavController,
     viewModel: CadastroClienteViewModel
 ) {
     val corDourada = Color(0xFFC79E5E)
     val context = LocalContext.current
     val scrollState = rememberScrollState()
-
-    var concordouLGPD by remember { mutableStateOf(false) }
-    // Dica: Se quiser que o complemento salve no ViewModel, use viewModel.complemento
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -47,7 +45,6 @@ fun CadastroClienteScreen(
                 .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 1. REDUZIDO O TOPO: De 195.dp para 80.dp para dar espaço à logomarca
             Spacer(modifier = Modifier.height(120.dp))
 
             Text(
@@ -58,7 +55,7 @@ fun CadastroClienteScreen(
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            // 2. CAMPOS MAIS COMPACTOS: Espaçamento vertical reduzido
+            // Interagindo diretamente com as variáveis corretas do seu ViewModel
             CampoExterno("Nome", viewModel.nome, { viewModel.nome = it }, corDourada)
             CampoExterno("Sobrenome", viewModel.sobrenome, { viewModel.sobrenome = it }, corDourada)
 
@@ -77,20 +74,19 @@ fun CadastroClienteScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // 3. LGPD MAIS DISCRETA
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Checkbox(
-                    checked = concordouLGPD,
-                    onCheckedChange = { concordouLGPD = it },
+                    checked = viewModel.concordoLGPD,
+                    onCheckedChange = { viewModel.concordoLGPD = it },
                     colors = CheckboxDefaults.colors(
                         checkedColor = corDourada,
                         uncheckedColor = corDourada,
                         checkmarkColor = Color.Black
                     ),
-                    modifier = Modifier.scale(0.8f) // Reduz um pouco o tamanho do quadrado
+                    modifier = Modifier.scale(0.8f)
                 )
                 Text(
                     text = "Concordo em permitir o uso dos meus dados para comunicação sobre o status do pedido e promoções da loja (LGPD).",
@@ -105,8 +101,13 @@ fun CadastroClienteScreen(
 
             Button(
                 onClick = {
-                    if (concordouLGPD) {
-                        onContinuar()
+                    if (viewModel.concordoLGPD) {
+                        if (viewModel.nome.isBlank() || viewModel.cpf.isBlank()) {
+                            Toast.makeText(context, "Preencha ao menos Nome e CPF!", Toast.LENGTH_SHORT).show()
+                        } else {
+                            // Apenas avança para a tela de senha. Os dados já estão salvos no ViewModel compartilhado!
+                            navController.navigate("criar_senha")
+                        }
                     } else {
                         Toast.makeText(context, "Aceite os termos da LGPD!", Toast.LENGTH_SHORT).show()
                     }
@@ -118,14 +119,13 @@ fun CadastroClienteScreen(
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Text(
-                    text = "CONTINUAR PARA SENHA",
+                    text = "AVANÇAR",
                     color = Color.Black,
                     fontWeight = FontWeight.Bold,
                     fontSize = 12.sp
                 )
             }
 
-            // Espaço para não grudar no fundo ao rolar
             Spacer(modifier = Modifier.height(50.dp))
         }
     }
@@ -134,7 +134,7 @@ fun CadastroClienteScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CampoExterno(label: String, value: String, onValueChange: (String) -> Unit, cor: Color, modifier: Modifier = Modifier) {
-    Column(modifier = modifier.padding(vertical = 2.dp)) { // Padding reduzido de 4 para 2
+    Column(modifier = modifier.padding(vertical = 2.dp)) {
         Text(
             text = label,
             color = Color.White,
@@ -144,7 +144,7 @@ fun CampoExterno(label: String, value: String, onValueChange: (String) -> Unit, 
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth().height(44.dp), // Altura reduzida de 48 para 44
+            modifier = Modifier.fillMaxWidth().height(44.dp),
             textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 13.sp),
             shape = RoundedCornerShape(8.dp),
             singleLine = true,
