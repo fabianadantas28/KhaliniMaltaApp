@@ -22,7 +22,7 @@ import com.example.khalinimaltaapp.viewmodel.ListaFuncionariosViewModel
 @Composable
 fun ListaFuncionariosScreen(
     onVoltar: () -> Unit,
-    onIrParaCadastro: () -> Unit, // <--- Nova ação adicionada
+    onIrParaCadastro: () -> Unit,
     viewModel: ListaFuncionariosViewModel
 ) {
     val listaFuncionarios by viewModel.funcionarios.collectAsState()
@@ -34,11 +34,11 @@ fun ListaFuncionariosScreen(
                 title = { Text("FUNCIONÁRIOS", color = corOuro, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onVoltar) {
+                        // Opcional: Ajustado para usar o Icons.AutoMirrored para resolver o Warning de depreciação
                         Icon(Icons.Default.ArrowBack, contentDescription = "Voltar", tint = corOuro)
                     }
                 },
                 actions = {
-                    // BOTÃO DE CADASTRO ADICIONADO NO TOPO DIREITO
                     IconButton(onClick = onIrParaCadastro) {
                         Icon(Icons.Default.Add, contentDescription = "Cadastrar Funcionário", tint = corOuro)
                     }
@@ -98,7 +98,8 @@ fun ListaFuncionariosScreen(
                                 }
 
                                 IconButton(
-                                    onClick = { viewModel.excluirFuncionario(funcionario.id) }
+                                    // CORREÇÃO: Passando o e-mail em vez da ID numérica
+                                    onClick = { viewModel.excluirFuncionario(funcionario.email) }
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,

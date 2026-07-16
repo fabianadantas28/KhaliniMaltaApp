@@ -1,22 +1,24 @@
 package com.example.khalinimaltaapp.viewmodel
 
-import android.app.Application
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.khalinimaltaapp.data.Usuario
-import com.example.khalinimaltaapp.data.database.AppDatabase
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class CadastroUsuarioViewModel(application: Application) : AndroidViewModel(application) {
+// Alterado de AndroidViewModel(application) para ViewModel comum
+class CadastroUsuarioViewModel : ViewModel() {
 
-    private val usuarioDao = AppDatabase.getDatabase(application).usuarioDao()
+    // Instância do Firebase Firestore
+    private val firestore = FirebaseFirestore.getInstance()
 
     var nome by mutableStateOf("")
     var email by mutableStateOf("")
@@ -48,24 +50,30 @@ class CadastroUsuarioViewModel(application: Application) : AndroidViewModel(appl
                 val formatador = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
                 val agora = formatador.format(Date())
 
+                val emailFormatado = email.trim().lowercase()
+
                 val novoUsuario = Usuario(
                     nome = nome.trim(),
-                    email = email.trim().lowercase(),
+                    email = emailFormatado,
                     senha = senhaTemporaria,
                     datahora = agora,
                     perfil = perfil,
-                    trocarSenha = true // Garante a regra de negócio da Fabiana: troca obrigatória
+                    trocarSenha = true // Garante a regra de negócio: troca obrigatória
                 )
 
-                usuarioDao.cadastrarUsuario(novoUsuario)
+                // Salva na coleção "usuarios" usando o email como o ID do documento
+                firestore.collection("usuarios")
+                    .document(emailFormatado)
+                    .set(novoUsuario)
+                    .await()
 
-                // Switch para a Main Thread para atualizar interface
+                // Atualiza a interface na Main Thread
                 launch(Dispatchers.Main) {
                     salvouComSucesso = true
                 }
             } catch (e: Exception) {
                 launch(Dispatchers.Main) {
-                    mensagemErro = "Erro ao salvar: ${e.message}"
+                    mensagemErro = "Erro ao salvar na nuvem: ${e.message}"
                 }
             }
         }

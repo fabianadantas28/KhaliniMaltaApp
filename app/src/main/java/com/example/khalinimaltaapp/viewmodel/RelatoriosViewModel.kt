@@ -1,37 +1,45 @@
 package com.example.khalinimaltaapp.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.khalinimaltaapp.data.database.AppDatabase
+import com.example.khalinimaltaapp.data.Cliente
+import com.example.khalinimaltaapp.data.Produto
+import com.example.khalinimaltaapp.data.Venda
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.snapshots
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 
-class RelatoriosViewModel(application: Application) : AndroidViewModel(application) {
+// Convertido para ViewModel comum (Firebase dispensa o contexto de application aqui)
+class RelatoriosViewModel : ViewModel() {
 
-    private val produtoDao = AppDatabase.getDatabase(application).produtoDao()
-    private val clienteDao = AppDatabase.getDatabase(application).clienteDao()
-    private val vendaDao = AppDatabase.getDatabase(application).vendaDao()
+    private val firestore = FirebaseFirestore.getInstance()
 
-    // --- 1. DADOS BRUTOS ASSEGURADOS EM SEGUNDO PLANO (AQUI ESTÁ A CORREÇÃO CRÍTICA) ---
+    // --- 1. CAPTAÇÃO DE DADOS EM TEMPO REAL DIRETAMENTE DA NUVEM ---
 
-    val produtos = produtoDao.getAllProdutos()
-        .flowOn(Dispatchers.IO) // Move a busca do banco para a Thread correta de IO
+    val produtos: StateFlow<List<Produto>> = firestore.collection("produtos")
+        .snapshots()
+        .map { querySnapshot -> querySnapshot.toObjects(Produto::class.java) }
+        .flowOn(Dispatchers.IO)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val clientes = clienteDao.getAllClientes()
-        .flowOn(Dispatchers.IO) // Move a busca do banco para a Thread correta de IO
+    val clientes: StateFlow<List<Cliente>> = firestore.collection("clientes")
+        .snapshots()
+        .map { querySnapshot -> querySnapshot.toObjects(Cliente::class.java) }
+        .flowOn(Dispatchers.IO)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val vendas = vendaDao.listarTodasVendas()
-        .flowOn(Dispatchers.IO) // Move a busca do banco para a Thread correta de IO
+    val vendas: StateFlow<List<Venda>> = firestore.collection("vendas")
+        .snapshots()
+        .map { querySnapshot -> querySnapshot.toObjects(Venda::class.java) }
+        .flowOn(Dispatchers.IO)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // --- 2. MÉTRICAS DE ESTOQUE E CLIENTES ---
 
     val totalProdutos: StateFlow<Int> = produtos
         .map { it.size }
-        .flowOn(Dispatchers.Default) // Cálculos leves processados de forma assíncrona
+        .flowOn(Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     val totalClientes: StateFlow<Int> = clientes

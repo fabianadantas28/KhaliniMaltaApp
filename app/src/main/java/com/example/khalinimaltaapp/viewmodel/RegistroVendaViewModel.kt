@@ -5,11 +5,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.khalinimaltaapp.data.dao.ProdutoDao
-import com.example.khalinimaltaapp.data.dao.VendaDao
+import com.example.khalinimaltaapp.data.Produto
 import com.example.khalinimaltaapp.data.Venda
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 data class ItemCarrinho(
     val nome: String,
@@ -17,10 +18,11 @@ data class ItemCarrinho(
     val quantidade: Int
 )
 
-class RegistroVendaViewModel(
-    private val produtoDao: ProdutoDao,
-    private val vendaDao: VendaDao
-) : ViewModel() {
+// Removemos 'produtoDao' e 'vendaDao' do construtor
+class RegistroVendaViewModel : ViewModel() {
+
+    // Instância do Firebase Firestore
+    private val firestore = FirebaseFirestore.getInstance()
 
     private val _itensCarrinho = MutableStateFlow<List<ItemCarrinho>>(emptyList())
     val itensCarrinho = _itensCarrinho.asStateFlow()
@@ -29,9 +31,8 @@ class RegistroVendaViewModel(
     val erroVenda = _erroVenda.asStateFlow()
 
     // --- LOGICA DO RECIBO ---
-    // Esta variável guarda os dados que a tela ReciboScreen vai ler
     var vendaRealizadaParaRecibo by mutableStateOf<Venda?>(null)
-        private set // Apenas o ViewModel pode alterar diretamente
+        private set
 
     // Função para fechar o recibo e limpar os dados
     fun limparRecibo() {
@@ -41,7 +42,6 @@ class RegistroVendaViewModel(
     fun adicionarAoCarrinho(nome: String, preco: String, qtd: Int) {
         if (nome.isEmpty()) return
 
-        // CORREÇÃO: Limpa espaços e troca a vírgula por ponto para o Kotlin aceitar o número
         val precoLimpo = preco.trim().replace(",", ".")
         val precoDouble = precoLimpo.toDoubleOrNull() ?: 0.0
 
@@ -58,7 +58,6 @@ class RegistroVendaViewModel(
         _itensCarrinho.value = listaAtual
     }
 
-    // Agora recebe nomeCliente e formaPagamento
     fun finalizarCompra(nomeCliente: String, formaPagamento: String, onSucesso: () -> Unit) {
         viewModelScope.launch {
             try {
@@ -73,27 +72,32 @@ class RegistroVendaViewModel(
                 var totalGeral = 0.0
                 val nomesDosProdutos = mutableListOf<String>()
 
+                // Iteramos pelos itens do carrinho usando co-rotinas com Firebase de forma sequencial ou paralela
                 lista.forEach { item ->
-                    // 1. Busca o produto para atualizar estoque
-                    val produtosFlow = produtoDao.buscarProdutosPorNome(item.nome).first()
-                    val p = produtosFlow.firstOrNull()
+                    // 1. Busca o produto na coleção "produtos" pelo nome para descobrir o ID / Código Interno e estoque
+                    val queryProduto = firestore.collection("produtos")
+                        .whereEqualTo("nomeProduto", item.nome)
+                        .get()
+                        .await()
 
-                    if (p != null) {
-                        // 2. Atualiza o estoque no banco
-                        val produtoComEstoqueAtualizado = p.copy(
-                            qtdeEstoque = p.qtdeEstoque - item.quantidade
-                        )
-                        produtoDao.updateProduto(produtoComEstoqueAtualizado)
+                    val documentoProduto = queryProduto.documents.firstOrNull()
+                    if (documentoProduto != null) {
+                        val produtoNaNuvem = documentoProduto.toObject(Produto::class.java)
 
-                        // 3. Registra a venda individual no banco de dados
-                        val valorVendaItem = item.precoUnitario * item.quantidade
-                        totalGeral += valorVendaItem
-                        nomesDosProdutos.add("${item.quantidade}x ${item.nome}")
+                        if (produtoNaNuvem != null) {
+                            // 2. Atualiza o estoque diretamente na nuvem
+                            val novoEstoque = produtoNaNuvem.qtdeEstoque - item.quantidade
+                            documentoProduto.reference.update("qtdeEstoque", novoEstoque).await()
 
-                        vendaDao.registrarVenda(
-                            Venda(
-                                produtoId = p.id,
-                                nomeProduto = p.nomeProduto,
+                            // 3. Soma os valores financeiros
+                            val valorVendaItem = item.precoUnitario * item.quantidade
+                            totalGeral += valorVendaItem
+                            nomesDosProdutos.add("${item.quantidade}x ${item.nome}")
+
+                            // 4. Registra o documento da venda na coleção "vendas" do Firestore
+                            val novaVenda = Venda(
+                                produtoId = 0, // Como o Firestore usa IDs em string ou gerados, o ID numérico vira opcional
+                                nomeProduto = produtoNaNuvem.nomeProduto,
                                 nomeCliente = if (nomeCliente.isBlank()) "Cliente Balcão" else nomeCliente,
                                 telefoneCliente = "",
                                 formaPagamento = formaPagamento,
@@ -101,14 +105,18 @@ class RegistroVendaViewModel(
                                 valorTotal = valorVendaItem,
                                 dataHora = agora
                             )
-                        )
+
+                            firestore.collection("vendas")
+                                .add(novaVenda)
+                                .await()
+                        }
                     }
                 }
 
-                // 4. PREPARA O RECIBO: Criamos um resumo de todos os itens para a tela de Recibo
+                // 5. PREPARA O RECIBO NA TELA
                 vendaRealizadaParaRecibo = Venda(
                     produtoId = 0,
-                    nomeProduto = nomesDosProdutos.joinToString("\n"), // Lista todos os produtos comprados
+                    nomeProduto = nomesDosProdutos.joinToString("\n"),
                     nomeCliente = if (nomeCliente.isBlank()) "Cliente Balcão" else nomeCliente,
                     telefoneCliente = "",
                     formaPagamento = formaPagamento,
@@ -117,7 +125,7 @@ class RegistroVendaViewModel(
                     dataHora = agora
                 )
 
-                _itensCarrinho.value = emptyList() // Limpa o carrinho após o sucesso
+                _itensCarrinho.value = emptyList() // Limpa o carrinho
                 onSucesso()
 
             } catch (e: Exception) {
