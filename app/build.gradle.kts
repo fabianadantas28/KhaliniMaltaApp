@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -52,4 +53,19 @@ dependencies {
 
     // ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+
+    // CARREGAMENTO DE IMAGENS (COIL) - Adicionado para renderizar as fotos dos produtos
+    implementation("io.coil-kt:coil-compose:2.6.0")
+
+    // ... mantenha as outras dependências e altere a do coil para:
+    implementation(libs.coil.compose)
+
+    // Importa o Firebase BoM (gerenciador de versões)
+    implementation(platform("com.google.firebase:firebase-bom:34.16.0"))
+
+    // Biblioteca do Firebase Analytics
+    implementation("com.google.firebase:firebase-analytics")
+
+    // Biblioteca do Cloud Firestore (Banco de Dados na Nuvem)
+    implementation("com.google.firebase:firebase-firestore")
 }

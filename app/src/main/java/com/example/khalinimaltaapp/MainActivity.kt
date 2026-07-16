@@ -1,247 +1,212 @@
 package com.example.khalinimaltaapp
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.khalinimaltaapp.data.database.AppDatabase
 import com.example.khalinimaltaapp.ui.theme.KhaliniMaltaAppTheme
 import com.example.khalinimaltaapp.viewmodel.*
 import com.example.khalinimaltaapp.ui.relatorio.PaginaRelatorio
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             KhaliniMaltaAppTheme {
                 val navController = rememberNavController()
                 val context = LocalContext.current
-                val db = AppDatabase.getDatabase(context)
 
-                // 1. O ViewModel Compartilhado (Dono do nome do cliente)
-                val sharedViewModel: CadastroClienteViewModel = viewModel()
+                // Instanciação limpa dos ViewModels compartilhados usando a extensão nativa do Compose
+                val cadastroClienteCompartilhadoVM: CadastroClienteViewModel = viewModel()
 
-                // 2. O ViewModel de Vendas
-                val vendaViewModel: RegistroVendaViewModel = viewModel(
-                    factory = object : ViewModelProvider.Factory {
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                            @Suppress("UNCHECKED_CAST")
-                            return RegistroVendaViewModel(db.produtoDao(), db.vendaDao()) as T
-                        }
-                    }
-                )
+                NavHost(navController = navController, startDestination = "splash") {
 
-                val vendaFinalizada = vendaViewModel.vendaRealizadaParaRecibo
-
-                if (vendaFinalizada != null) {
-                    ReciboScreen(
-                        venda = vendaFinalizada,
-                        onFinalizar = {
-                            vendaViewModel.limparRecibo()
-                            navController.navigate("pagina_categorias") {
-                                popUpTo(0) { inclusive = true }
-                                launchSingleTop = true
+                    composable(route = "splash") {
+                        SplashScreen(onTimeout = {
+                            navController.navigate("login") {
+                                popUpTo("splash") { inclusive = true }
                             }
-                        }
-                    )
-                } else {
-                    NavHost(navController = navController, startDestination = "splash") {
+                        })
+                    }
 
-                        composable(route = "splash") {
-                            SplashScreen(onTimeout = {
+                    composable(route = "login") {
+                        LoginScreen(
+                            navController = navController,
+                            sharedViewModel = cadastroClienteCompartilhadoVM,
+                            onIrParaPaginaInicial = { navController.navigate("home") },
+                            onIrParaCadastro = { navController.navigate("cadastro_cliente") }
+                        )
+                    }
+
+                    composable("home") {
+                        val relViewModel: RelatoriosViewModel = viewModel()
+                        PaginaPrincipalKM(
+                            onAbrirMenu = { navController.navigate("menu") },
+                            onIrParaLogin = {
                                 navController.navigate("login") {
-                                    popUpTo("splash") { inclusive = true }
+                                    popUpTo("home") { inclusive = true }
                                 }
-                            })
-                        }
+                            },
+                            viewModel = relViewModel
+                        )
+                    }
 
-                        // CONSERTO AQUI: Passando o sharedViewModel para a LoginScreen
-                        composable(route = "login") {
-                            LoginScreen(
-                                navController = navController,
-                                sharedViewModel = sharedViewModel, // ESSA LINHA CONSERTA O ERRO DO NOME
-                                onIrParaPaginaInicial = { navController.navigate("home") },
-                                onIrParaCadastro = { navController.navigate("cadastro_cliente") }
-                            )
-                        }
-
-                        composable("troca_senha/{usuarioId}") { backStackEntry ->
-                            val usuarioId = backStackEntry.arguments?.getString("usuarioId")?.toInt() ?: 0
-                            TrocaSenhaScreen(
-                                usuarioId = usuarioId,
-                                onSenhaAtualizada = {
-                                    navController.navigate("home") {
-                                        popUpTo("login") { inclusive = true }
-                                    }
+                    composable(route = "menu") {
+                        MenuScreen(
+                            sharedViewModel = cadastroClienteCompartilhadoVM,
+                            onNavegar = { rota -> navController.navigate(rota) },
+                            onLogout = {
+                                navController.navigate("login") {
+                                    popUpTo("home") { inclusive = true }
                                 }
-                            )
-                        }
+                            }
+                        )
+                    }
 
-                        composable("cadastro_usuario") {
-                            CadastroUsuarioScreen(onVoltar = { navController.popBackStack() })
-                        }
+                    composable(route = "pagina_categorias") {
+                        PaginaCategoriaScreen(navController = navController)
+                    }
 
-                        composable(route = "cadastro_cliente") {
-                            CadastroClienteScreen(
-                                onContinuar = { navController.navigate("criar_senha") },
-                                viewModel = sharedViewModel
-                            )
-                        }
+                    composable("menu_administracao") {
+                        MenuAdministracaoScreen(
+                            onVoltar = { navController.popBackStack() },
+                            onNavegar = { rota -> navController.navigate(rota) }
+                        )
+                    }
 
-                        composable(route = "criar_senha") {
-                            CriarSenhaScreen(
+                    composable("cadastro_produto") {
+                        val vModel: CadastroProdutoViewModel = viewModel()
+                        CadastroProdutoScreen(navController = navController, viewModel = vModel)
+                    }
+
+                    composable("lista_produtos/{categoriaNome}") { backStackEntry ->
+                        val categoria = backStackEntry.arguments?.getString("categoriaNome") ?: ""
+                        val vModel: CadastroProdutoViewModel = viewModel()
+                        ListaProdutosScreen(
+                            navController = navController,
+                            categoriaSelecionada = categoria,
+                            viewModel = vModel
+                        )
+                    }
+
+                    composable("controle_estoque") {
+                        PaginaControleEstoque(navController = navController)
+                    }
+
+                    composable(route = "cadastro_cliente") {
+                        CadastroClienteScreen(
+                            navController = navController,
+                            viewModel = cadastroClienteCompartilhadoVM
+                        )
+                    }
+
+                    composable(route = "criar_senha") {
+                        CriarSenhaScreen(
+                            viewModel = cadastroClienteCompartilhadoVM,
+                            onFinalizar = {
+                                navController.navigate("login") {
+                                    popUpTo("login") { inclusive = true }
+                                }
+                            }
+                        )
+                    }
+
+                    composable(route = "lista_cliente") {
+                        val listaViewModel: ListaClientesViewModel = viewModel()
+                        ListaClientesScreen(
+                            viewModel = listaViewModel,
+                            onVoltar = { navController.popBackStack() },
+                            onIrParaCadastro = { navController.navigate("cadastro_cliente") }
+                        )
+                    }
+
+                    composable(route = "cadastro_usuario") {
+                        val usuarioViewModel: CadastroUsuarioViewModel = viewModel()
+                        CadastroUsuarioScreen(
+                            viewModel = usuarioViewModel,
+                            onVoltar = { navController.popBackStack() }
+                        )
+                    }
+
+                    composable(
+                        route = "vendas?produtoNome={produtoNome}&preco={preco}&quantidade={quantidade}",
+                        arguments = listOf(
+                            navArgument("produtoNome") { type = NavType.StringType; defaultValue = "" },
+                            navArgument("preco") { type = NavType.FloatType; defaultValue = 0f },
+                            navArgument("quantidade") { type = NavType.IntType; defaultValue = 1 }
+                        )
+                    ) {
+                        val rvViewModel: RegistroVendaViewModel = viewModel()
+                        val reciboParaMostrar = rvViewModel.vendaRealizadaParaRecibo
+
+                        if (reciboParaMostrar != null) {
+                            ReciboScreen(
+                                venda = reciboParaMostrar,
                                 onFinalizar = {
-                                    navController.navigate("login") {
-                                        popUpTo("login") { inclusive = true }
-                                    }
-                                },
-                                viewModel = sharedViewModel
-                            )
-                        }
-
-                        composable("home") {
-                            val relViewModel: RelatoriosViewModel = viewModel()
-                            PaginaPrincipalKM(
-                                onAbrirMenu = { navController.navigate("menu") },
-                                onIrParaLogin = {
-                                    navController.navigate("login") {
-                                        popUpTo("home") { inclusive = true } // Isso limpa a memória ao sair
-                                    }
-                                },
-                                viewModel = relViewModel
-                            )
-                        }
-
-                        composable(route = "menu") {
-                            MenuScreen(
-                                onNavegar = { rota -> navController.navigate(rota) },
-                                onLogout = {
-                                    sharedViewModel.limparParaSair() // Use o nome exato da função do seu ViewModel
-                                    navController.navigate("login") {
-                                        popUpTo("home") { inclusive = true }
-                                    }
+                                    rvViewModel.limparRecibo()
+                                    navController.popBackStack()
                                 }
                             )
-                        }
-
-                        composable(route = "pagina_categorias") {
-                            PaginaCategoriaScreen(navController = navController)
-                        }
-
-                        composable("menu_administracao") {
-                            MenuAdministracaoScreen(
-                                onVoltar = { navController.popBackStack() },
-                                onNavegar = { rota -> navController.navigate(rota) }
-                            )
-                        }
-
-                        composable("cadastro_produto") {
-                            val vModel: CadastroProdutoViewModel = viewModel(
-                                factory = object : ViewModelProvider.Factory {
-                                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                                        @Suppress("UNCHECKED_CAST")
-                                        return CadastroProdutoViewModel(db.produtoDao()) as T
-                                    }
-                                }
-                            )
-                            CadastroProdutoScreen(navController = navController, viewModel = vModel)
-                        }
-
-                        composable("lista_produtos/{categoriaNome}") { backStackEntry ->
-                            val categoria = backStackEntry.arguments?.getString("categoriaNome") ?: ""
-                            val vModel: CadastroProdutoViewModel = viewModel(
-                                factory = object : ViewModelProvider.Factory {
-                                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                                        @Suppress("UNCHECKED_CAST")
-                                        return CadastroProdutoViewModel(db.produtoDao()) as T
-                                    }
-                                }
-                            )
-                            ListaProdutosScreen(
-                                navController = navController,
-                                categoriaSelecionada = categoria,
-                                viewModel = vModel
-                            )
-                        }
-
-                        // Dentro do seu NavHost { ... }
-                        composable("controle_estoque") {
-                            // PASSE o navController aqui para a seta de voltar funcionar
-                            PaginaControleEstoque(navController = navController)
-                        }
-
-                        composable(route = "lista_cliente") {
-                            val listaViewModel: ListaClientesViewModel = viewModel(
-                                factory = object : ViewModelProvider.Factory {
-                                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                                        @Suppress("UNCHECKED_CAST")
-                                        return ListaClientesViewModel(db.clienteDao()) as T
-                                    }
-                                }
-                            )
-                            ListaClientesScreen(
-                                viewModel = listaViewModel,
-                                onVoltar = { navController.popBackStack() },
-                                onIrParaCadastro = { navController.navigate("cadastro_cliente") }
-                            )
-                        }
-
-                        composable("relatorios") {
-                            val rViewModel: RelatoriosViewModel = viewModel(
-                                factory = ViewModelProvider.AndroidViewModelFactory.getInstance(context.applicationContext as android.app.Application)
-                            )
-                            PaginaRelatorio(onVoltar = { navController.popBackStack() }, viewModel = rViewModel)
-                        }
-
-                        composable(
-                            route = "vendas?produtoNome={produtoNome}&preco={preco}&quantidade={quantidade}",
-                            arguments = listOf(
-                                navArgument("produtoNome") { type = NavType.StringType; defaultValue = "" },
-                                navArgument("preco") { type = NavType.StringType; defaultValue = "" },
-                                navArgument("quantidade") { type = NavType.IntType; defaultValue = 1 }
-                            )
-                        ) {
+                        } else {
                             RegistroVendaScreen(
                                 navController = navController,
-                                vModel = vendaViewModel,
-                                clienteViewModel = sharedViewModel
+                                vModel = rvViewModel,
+                                clienteViewModel = cadastroClienteCompartilhadoVM
                             )
                         }
+                    }
 
-                        composable("entrada_estoque") {
-                            val entradaViewModel: EntradaEstoqueViewModel = viewModel(
-                                factory = object : ViewModelProvider.Factory {
-                                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                                        @Suppress("UNCHECKED_CAST")
-                                        return EntradaEstoqueViewModel(db.produtoDao()) as T
-                                    }
-                                }
-                            )
-                            EntradaEstoqueScreen(
-                                navController = navController,
-                                vModel = entradaViewModel
-                            )
-                        }
+                    composable("relatorios") {
+                        val rViewModel: RelatoriosViewModel = viewModel()
+                        PaginaRelatorio(onVoltar = { navController.popBackStack() }, viewModel = rViewModel)
+                    }
 
-                        composable("gestao_vendas") {
-                            val gvViewModel: GestaoVendasViewModel = viewModel(
-                                factory = object : ViewModelProvider.Factory {
-                                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                                        return GestaoVendasViewModel(db.vendaDao()) as T
-                                    }
+                    composable("entrada_estoque") {
+                        val entradaViewModel: EntradaEstoqueViewModel = viewModel()
+                        EntradaEstoqueScreen(navController = navController, vModel = entradaViewModel)
+                    }
+
+                    composable("gestao_vendas") {
+                        val gvViewModel: GestaoVendasViewModel = viewModel()
+                        GestaoVendasScreen(onVoltar = { navController.popBackStack() }, viewModel = gvViewModel)
+                    }
+
+                    // CORREÇÃO: Alterado argumento para String (para aceitar o email do usuário do Firebase)
+                    composable(
+                        route = "troca_senha/{usuarioEmail}",
+                        arguments = listOf(navArgument("usuarioEmail") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        val usuarioEmail = backStackEntry.arguments?.getString("usuarioEmail") ?: ""
+                        val tsViewModel: TrocaSenhaViewModel = viewModel()
+
+                        TrocaSenhaScreen(
+                            email = usuarioEmail,
+                            viewModel = tsViewModel,
+                            onSenhaAtualizada = {
+                                Toast.makeText(context, "Senha atualizada! Faça login novamente.", Toast.LENGTH_LONG).show()
+                                navController.navigate("login") {
+                                    popUpTo("login") { inclusive = true }
                                 }
-                            )
-                            GestaoVendasScreen(onVoltar = { navController.popBackStack() }, viewModel = gvViewModel)
-                        }
+                            }
+                        )
+                    }
+
+                    composable("lista_funcionarios") {
+                        val funcionariosVM: ListaFuncionariosViewModel = viewModel()
+                        ListaFuncionariosScreen(
+                            onVoltar = { navController.popBackStack() },
+                            onIrParaCadastro = { navController.navigate("cadastro_usuario") },
+                            viewModel = funcionariosVM
+                        )
                     }
                 }
             }

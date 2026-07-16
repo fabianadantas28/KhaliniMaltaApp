@@ -30,8 +30,6 @@ fun RegistroVendaScreen(
     val totalGeral = listaCompras.sumOf { it.precoUnitario * it.quantidade }
     val erroMensagem by vModel.erroVenda.collectAsState()
 
-    // CORREÇÃO 1: Tornar o nome reativo.
-    // Usamos o nome que está no clienteViewModel. Se ele mudar lá, muda aqui na hora.
     val nomeExibicao = if (clienteViewModel.nome.isEmpty()) "Cliente Balcão" else clienteViewModel.nome
 
     var expandido by remember { mutableStateOf(false) }
@@ -40,14 +38,22 @@ fun RegistroVendaScreen(
     val opcoesPagamento = listOf("Pix", "Cartão", "Dinheiro")
     val corOuro = Color(0xFFC39953)
 
+    // CORREÇÃO CIRÚRGICA: Lê os argumentos tratando tanto String quanto Float/Double com segurança
     LaunchedEffect(navBackStackEntry) {
-        val nome = navBackStackEntry?.arguments?.getString("produtoNome") ?: ""
-        val preco = navBackStackEntry?.arguments?.getString("preco") ?: ""
-        val qtd = navBackStackEntry?.arguments?.getInt("quantidade") ?: 1
+        val arguments = navBackStackEntry?.arguments
+        val nome = arguments?.getString("produtoNome") ?: ""
 
-        if (nome.isNotEmpty()) {
-            vModel.adicionarAoCarrinho(nome, preco, qtd)
-            navBackStackEntry?.arguments?.remove("produtoNome")
+        // Tenta ler como String, se falhar tenta ler como Float (conforme mapeado na MainActivity)
+        val precoStr = arguments?.getString("preco") ?: arguments?.getFloat("preco")?.toString() ?: "0.0"
+        val qtd = arguments?.getInt("quantidade") ?: 1
+
+        // Só adiciona se o nome for válido e não for literalmente a palavra "null"
+        if (nome.isNotEmpty() && nome != "null") {
+            vModel.adicionarAoCarrinho(nome, precoStr, qtd)
+
+            // Limpa para evitar reentradas duplicadas ao rotacionar a tela
+            arguments?.remove("produtoNome")
+            arguments?.remove("preco")
         }
     }
 
@@ -72,12 +78,11 @@ fun RegistroVendaScreen(
                 ) {
                     Button(
                         onClick = {
-                            // CORREÇÃO 2: Passar os nomes dos parâmetros para não haver erro de ordem
                             vModel.finalizarCompra(
                                 nomeCliente = nomeExibicao,
                                 formaPagamento = formaPagamento
                             ) {
-                                // O recibo será disparado pela MainActivity
+                                // O recibo será disparado automaticamente pela MainActivity
                             }
                         },
                         modifier = Modifier.fillMaxWidth().height(55.dp),
@@ -106,7 +111,7 @@ fun RegistroVendaScreen(
 
                 Text("CLIENTE LOGADO", color = corOuro, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 Text(
-                    text = nomeExibicao, // Usando a variável corrigida
+                    text = nomeExibicao,
                     color = Color.White,
                     fontSize = 18.sp,
                     modifier = Modifier.padding(vertical = 8.dp)
@@ -115,6 +120,17 @@ fun RegistroVendaScreen(
                 Spacer(modifier = Modifier.height(24.dp))
                 Text("ITENS SELECIONADOS", color = corOuro, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            if (listaCompras.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("Nenhum produto no carrinho.", color = Color.Gray, fontSize = 14.sp)
+                    }
+                }
             }
 
             items(listaCompras) { item ->

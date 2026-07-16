@@ -2,17 +2,17 @@ package com.example.khalinimaltaapp
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Menu // ADICIONADO ÍCONE SEGURO
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector // ADICIONADO SUPORTE A VECTOR
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -31,12 +31,9 @@ fun PaginaPrincipalKM(
     onIrParaLogin: () -> Unit,
     viewModel: RelatoriosViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
-    // Coletando dados REAIS e atualizados do ViewModel
     val totalClientes by viewModel.totalClientes.collectAsState()
-    val receitaTotal by viewModel.receitaTotal.collectAsState() // Melhor para "Vendas Mês"
+    val receitaTotal by viewModel.receitaTotal.collectAsState()
     val alertasEstoque by viewModel.produtosAlerta.collectAsState()
-
-    // USANDO O GRÁFICO DIÁRIO (Última Semana)
     val dadosGraficoDiario by viewModel.dadosGraficoDiario.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -75,19 +72,28 @@ fun PaginaPrincipalKM(
 
             Spacer(modifier = Modifier.height(15.dp))
 
-            // CARDS COM DADOS REAIS
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // 1. Receita Total acumulada
+                // Formatação blindada com Locale para evitar quebra regional no S25
+                val formatoReal = remember(receitaTotal) {
+                    try {
+                        java.text.NumberFormat.getCurrencyInstance(java.util.Locale("pt", "BR"))
+                            .format(receitaTotal)
+                            .replace("R$", "")
+                            .trim()
+                    } catch (e: Exception) {
+                        "0,00"
+                    }
+                }
+
                 CardAtivoHome(
                     titulo = "Vendas\nMês",
-                    valor = "R$ ${"%.2f".format(receitaTotal)}",
+                    valor = "R$ $formatoReal",
                     modifier = Modifier.weight(1f)
                 )
 
-                // 2. Alertas Estoque (INTEGRADO - Mostra itens com 1 a 5 unidades)
                 CardAtivoHome(
                     titulo = "Alertas\nEstoque",
                     mostrarSeta = true,
@@ -95,7 +101,6 @@ fun PaginaPrincipalKM(
                     modifier = Modifier.weight(1f)
                 )
 
-                // 3. Novos Clientes (Contagem total do banco)
                 CardAtivoHome(
                     titulo = "Novos\nClientes",
                     valor = "$totalClientes",
@@ -111,7 +116,6 @@ fun PaginaPrincipalKM(
                 fontSize = 13.sp
             )
 
-            // GRÁFICO DIÁRIO (7 barras)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -126,7 +130,6 @@ fun PaginaPrincipalKM(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.Bottom
                 ) {
-                    // Mapeando os dados do gráfico diário
                     dadosGraficoDiario.forEachIndexed { index, peso ->
                         Box(
                             modifier = Modifier
@@ -149,19 +152,19 @@ fun PaginaPrincipalKM(
             Spacer(modifier = Modifier.height(150.dp))
         }
 
-        // BARRA INFERIOR
+        // BARRA INFERIOR MODIFICADA (Trocado o ícone nativo que causava o crash)
         Row(
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 40.dp).fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
         ) {
-            BotaoHome(icon = R.drawable.baseline_home_24, label = "Sair", aoClicar = onIrParaLogin)
+            BotaoHomeComResource(icon = R.drawable.baseline_home_24, label = "Sair", aoClicar = onIrParaLogin)
             Spacer(modifier = Modifier.width(45.dp))
-            BotaoHome(icon = android.R.drawable.ic_dialog_dialer, label = "Menu", aoClicar = onAbrirMenu)
+            // Usando Icons.Default.Menu que é 100% seguro contra quebras de sistema
+            BotaoHomeComVector(icon = Icons.Default.Menu, label = "Menu", aoClicar = onAbrirMenu)
         }
     }
 }
 
-// Composable de suporte (CardAtivoHome e BotaoHome permanecem com o design original)
 @Composable
 fun CardAtivoHome(titulo: String, valor: String, modifier: Modifier, mostrarSeta: Boolean = false) {
     Surface(
@@ -187,11 +190,23 @@ fun CardAtivoHome(titulo: String, valor: String, modifier: Modifier, mostrarSeta
     }
 }
 
+// Botão para imagens da pasta res/drawable
 @Composable
-fun BotaoHome(icon: Int, label: String, aoClicar: () -> Unit) {
+fun BotaoHomeComResource(icon: Int, label: String, aoClicar: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable { aoClicar() }.padding(8.dp)) {
         Surface(modifier = Modifier.size(60.dp), shape = RoundedCornerShape(12.dp), color = CorOuroPrincipalHome) {
             Icon(painter = painterResource(id = icon), contentDescription = null, tint = Color.Black, modifier = Modifier.padding(16.dp))
+        }
+        Text(text = label, color = CorOuroPrincipalHome, fontSize = 11.sp, modifier = Modifier.padding(top = 4.dp))
+    }
+}
+
+// Botão para ícones do próprio Compose (Evita dependência de recursos do Android)
+@Composable
+fun BotaoHomeComVector(icon: ImageVector, label: String, aoClicar: () -> Unit) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable { aoClicar() }.padding(8.dp)) {
+        Surface(modifier = Modifier.size(60.dp), shape = RoundedCornerShape(12.dp), color = CorOuroPrincipalHome) {
+            Icon(imageVector = icon, contentDescription = null, tint = Color.Black, modifier = Modifier.padding(16.dp))
         }
         Text(text = label, color = CorOuroPrincipalHome, fontSize = 11.sp, modifier = Modifier.padding(top = 4.dp))
     }

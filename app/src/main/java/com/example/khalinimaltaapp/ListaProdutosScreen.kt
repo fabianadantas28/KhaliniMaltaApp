@@ -1,10 +1,6 @@
 package com.example.khalinimaltaapp
 
-import android.graphics.Bitmap
-import android.graphics.ImageDecoder
 import android.net.Uri
-import android.os.Build
-import android.provider.MediaStore
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
@@ -21,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -31,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.khalinimaltaapp.viewmodel.CadastroProdutoViewModel
 import com.example.khalinimaltaapp.data.Produto
+import coil.compose.AsyncImage // Importação da biblioteca Coil adicionada
 
 val CorOuroBordaLista = Color(0xFFC79E5E)
 
@@ -79,7 +75,6 @@ fun ListaProdutosScreen(
                     modifier = Modifier.padding(paddingValues).padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // O segredo está aqui: chamamos um componente menor para cada item
                     items(produtos) { produto ->
                         if (produto.qtdeEstoque > 0) {
                             ItemProdutoCard(produto, navController)
@@ -94,26 +89,7 @@ fun ListaProdutosScreen(
 
 @Composable
 fun ItemProdutoCard(produto: Produto, navController: NavController) {
-    val context = LocalContext.current
     var quantidadeSelecionada by remember { mutableIntStateOf(1) }
-    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
-
-    // Carrega a imagem de forma segura
-    LaunchedEffect(produto.imagemUri) {
-        if (!produto.imagemUri.isNullOrEmpty()) {
-            try {
-                val uri = Uri.parse(produto.imagemUri)
-                bitmap = if (Build.VERSION.SDK_INT < 28) {
-                    MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
-                } else {
-                    val source = ImageDecoder.createSource(context.contentResolver, uri)
-                    ImageDecoder.decodeBitmap(source)
-                }
-            } catch (e: Exception) {
-                bitmap = null
-            }
-        }
-    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -125,7 +101,7 @@ fun ItemProdutoCard(produto: Produto, navController: NavController) {
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // FOTO
+            // FOTO OTIMIZADA COM COIL (CORRIGIDO)
             Box(
                 modifier = Modifier
                     .size(80.dp)
@@ -133,15 +109,23 @@ fun ItemProdutoCard(produto: Produto, navController: NavController) {
                     .clip(RoundedCornerShape(8.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                if (bitmap != null) {
-                    Image(
-                        bitmap = bitmap!!.asImageBitmap(),
-                        contentDescription = null,
+                if (!produto.imagemUri.isNullOrEmpty()) {
+                    AsyncImage(
+                        model = produto.imagemUri,
+                        contentDescription = "Foto de ${produto.nomeProduto}",
                         modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
+                        contentScale = ContentScale.Crop,
+                        // Caso a permissão expire em URI real, mostra um ícone padrão elegante
+                        error = painterResource(id = R.drawable.acessorios),
+                        placeholder = painterResource(id = R.drawable.acessorios)
                     )
                 } else {
-                    Icon(Icons.Default.Image, "Sem foto", tint = CorOuroBordaLista.copy(alpha = 0.3f), modifier = Modifier.size(40.dp))
+                    Icon(
+                        Icons.Default.Image,
+                        "Sem foto",
+                        tint = CorOuroBordaLista.copy(alpha = 0.3f),
+                        modifier = Modifier.size(40.dp)
+                    )
                 }
             }
 

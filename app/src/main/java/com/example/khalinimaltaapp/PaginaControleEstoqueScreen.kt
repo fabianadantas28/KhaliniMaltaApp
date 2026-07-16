@@ -1,28 +1,32 @@
 package com.example.khalinimaltaapp
 
 import com.example.khalinimaltaapp.viewmodel.ControleEstoqueViewModel
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.khalinimaltaapp.data.Produto
-import com.example.khalinimaltaapp.data.database.AppDatabase
+import coil.compose.AsyncImage
 
 // CORES DA KHALINI
 val KhaliniGold = Color(0xFFC39953)
@@ -33,17 +37,9 @@ val StatusRed = Color(0xFFD50000)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PaginaControleEstoque(navController: NavController) { // Adicionado NavController
-    val context = LocalContext.current
-    val db = AppDatabase.getDatabase(context)
-
-    val viewModel: ControleEstoqueViewModel = viewModel(
-        factory = object : ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return ControleEstoqueViewModel(db.produtoDao()) as T
-            }
-        }
-    )
+fun PaginaControleEstoque(navController: NavController) {
+    // CORRIGIDO: Instanciação limpa e direta do ViewModel sem passar o DAO local do Room
+    val viewModel: ControleEstoqueViewModel = viewModel()
 
     val produtos by viewModel.produtosFiltrados.collectAsState()
     val totalItens = produtos.sumOf { it.qtdeEstoque }
@@ -68,7 +64,7 @@ fun PaginaControleEstoque(navController: NavController) { // Adicionado NavContr
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp)
         ) {
-            // --- NOVO: CABEÇALHO COM SETA DE VOLTAR ---
+            // --- CABEÇALHO COM SETA DE VOLTAR ---
             Spacer(modifier = Modifier.height(10.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -76,7 +72,8 @@ fun PaginaControleEstoque(navController: NavController) { // Adicionado NavContr
             ) {
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(
-                        imageVector = Icons.Default.ArrowBack,
+                        // CORRIGIDO: Modificado para a versão moderna AutoMirrored para remover o warning
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Voltar",
                         tint = KhaliniGold
                     )
@@ -91,7 +88,6 @@ fun PaginaControleEstoque(navController: NavController) { // Adicionado NavContr
                     fontWeight = FontWeight.Bold
                 )
             }
-            // ------------------------------------------
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -123,8 +119,8 @@ fun PaginaControleEstoque(navController: NavController) { // Adicionado NavContr
 
             if (produtos.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    val mensagem = if (viewModel.buscaTexto.isEmpty()) "Nenhum produto cadastrado." else "Nenhum resultado encontrado."
-                    Text(mensagem, color = Color.Gray)
+                    val message = if (viewModel.buscaTexto.isEmpty()) "Nenhum produto cadastrado." else "Nenhum resultado encontrado."
+                    Text(message, color = Color.Gray)
                 }
             } else {
                 LazyColumn(
@@ -134,7 +130,6 @@ fun PaginaControleEstoque(navController: NavController) { // Adicionado NavContr
                     items(produtos) { produto ->
                         CardProdutoEstoque(produto)
                     }
-                    // Espaço extra no final para o bottomBar não cobrir o último item
                     item { Spacer(modifier = Modifier.height(20.dp)) }
                 }
             }
@@ -149,47 +144,99 @@ fun CardProdutoEstoque(produto: Produto) {
         colors = CardDefaults.cardColors(containerColor = CardBackground),
         shape = RoundedCornerShape(12.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(70.dp)
+                    .border(1.dp, KhaliniGold.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
+                    .clip(RoundedCornerShape(10.dp)),
+                contentAlignment = Alignment.Center
             ) {
-                Column {
-                    Text(produto.nomeProduto, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    Text("Cód: ${produto.codigoInterno} | ${produto.categoria}", color = Color.Gray, fontSize = 13.sp)
-                }
-
-                val (txtStatus, corStatus) = when {
-                    produto.qtdeEstoque > 10 -> "Em Estoque" to StatusGreen
-                    produto.qtdeEstoque > 0 -> "Baixo" to StatusOrange
-                    else -> "Esgotado" to StatusRed
-                }
-
-                Surface(color = corStatus, shape = RoundedCornerShape(8.dp)) {
-                    Text(
-                        txtStatus,
-                        color = Color.White,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold
+                if (!produto.imagemUri.isNullOrEmpty()) {
+                    AsyncImage(
+                        model = produto.imagemUri,
+                        contentDescription = "Foto de ${produto.nomeProduto}",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                        error = painterResource(id = R.drawable.acessorios),
+                        placeholder = painterResource(id = R.drawable.acessorios)
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Image,
+                        contentDescription = "Sem foto",
+                        tint = KhaliniGold.copy(alpha = 0.3f),
+                        modifier = Modifier.size(32.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.width(14.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Qtd: ${produto.qtdeEstoque}", color = KhaliniGold, fontWeight = FontWeight.Bold)
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Column(modifier = Modifier.weight(1f).padding(end = 4.dp)) {
+                        Text(
+                            text = produto.nomeProduto,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            maxLines = 1
+                        )
+                        Text(
+                            text = "Cód: ${produto.codigoInterno} | ${produto.categoria}",
+                            color = Color.Gray,
+                            fontSize = 12.sp
+                        )
+                    }
 
-                Text(
-                    text = "R$ ${String.format("%.2f", produto.preco)}",
-                    color = Color.White,
-                    fontSize = 14.sp
-                )
+                    val (txtStatus, corStatus) = when {
+                        produto.qtdeEstoque > 10 -> "Em Estoque" to StatusGreen
+                        produto.qtdeEstoque > 0 -> "Baixo" to StatusOrange
+                        else -> "Esgotado" to StatusRed
+                    }
+
+                    Surface(color = corStatus, shape = RoundedCornerShape(6.dp)) {
+                        Text(
+                            text = txtStatus,
+                            color = Color.White,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Qtd: ${produto.qtdeEstoque}",
+                        color = KhaliniGold,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
+
+                    Text(
+                        text = "R$ ${String.format("%.2f", produto.preco)}",
+                        color = Color.White,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         }
     }

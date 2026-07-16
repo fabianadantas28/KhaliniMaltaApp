@@ -1,22 +1,24 @@
 package com.example.khalinimaltaapp.viewmodel
 
-import android.app.Application
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.khalinimaltaapp.data.Cliente
-import com.example.khalinimaltaapp.data.database.AppDatabase
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
-class CadastroClienteViewModel(application: Application) : AndroidViewModel(application) {
+// Removemos a necessidade de passar o ClienteDao no construtor
+class CadastroClienteViewModel : ViewModel() {
 
-    private val clienteDao = AppDatabase.getDatabase(application).clienteDao()
+    // Instância do Firebase Firestore
+    private val firestore = FirebaseFirestore.getInstance()
 
-    // Variáveis de estado
+    // Variáveis estáveis usando o 'by' correto do Kotlin
     var nome by mutableStateOf("")
     var sobrenome by mutableStateOf("")
     var dataNasc by mutableStateOf("")
@@ -28,15 +30,11 @@ class CadastroClienteViewModel(application: Application) : AndroidViewModel(appl
     var senha by mutableStateOf("")
     var confirmarSenha by mutableStateOf("")
 
-    // --- NOVA FUNÇÃO PARA CONSERTAR O ERRO NA MAINACTIVITY ---
-    fun atualizarNome(novoNome: String) {
-        nome = novoNome
-    }
-
     fun salvarNoBanco() {
         if (senha == confirmarSenha && senha.isNotEmpty()) {
             viewModelScope.launch(Dispatchers.IO) {
                 try {
+                    // Mapeia os dados da tela para o objeto Cliente
                     val novoCliente = Cliente(
                         nome = nome,
                         sobrenome = sobrenome,
@@ -46,22 +44,23 @@ class CadastroClienteViewModel(application: Application) : AndroidViewModel(appl
                         email = email,
                         senha = senha
                     )
-                    clienteDao.inserir(novoCliente)
-                    Log.d("DB_SUCCESS", "Cliente ${novoCliente.nome} salvo com sucesso!")
 
-                    // Limpa apenas dados de senha após cadastro
-                    senha = ""
-                    confirmarSenha = ""
+                    // Salva no Firestore dentro de uma coleção chamada "clientes"
+                    // O "document(novoCliente.cpf)" usa o CPF do cliente como o ID único do documento
+                    firestore.collection("clientes")
+                        .document(novoCliente.cpf)
+                        .set(novoCliente)
+                        .await() // Aguarda a tarefa do Firebase terminar de forma assíncrona
+
+                    Log.d("FIREBASE_SUCCESS", "Cliente ${novoCliente.nome} salvo na nuvem com sucesso!")
+
                 } catch (e: Exception) {
-                    Log.e("DB_ERROR", "Erro ao inserir cliente: ${e.message}")
+                    Log.e("FIREBASE_ERROR", "Erro ao salvar no Firestore: ${e.message}")
                 }
             }
         }
     }
 
-    /**
-     * Função chamada no Logout pela MainActivity
-     */
     fun limparParaSair() {
         nome = ""
         sobrenome = ""
