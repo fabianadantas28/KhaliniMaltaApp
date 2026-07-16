@@ -18,7 +18,7 @@ import com.example.khalinimaltaapp.viewmodel.TrocaSenhaViewModel
 
 @Composable
 fun TrocaSenhaScreen(
-    usuarioId: Int,
+    email: String, // CORRIGIDO: Alterado de usuarioId: Int para email: String
     onSenhaAtualizada: () -> Unit,
     viewModel: TrocaSenhaViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
@@ -116,7 +116,7 @@ fun TrocaSenhaScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
-                onClick = { viewModel.trocarSenha(usuarioId) },
+                onClick = { viewModel.trocarSenha(email) }, // CORRIGIDO: Agora passa o email (String) esperado pelo ViewModel
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(55.dp),

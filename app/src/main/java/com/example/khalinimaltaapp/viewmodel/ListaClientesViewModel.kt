@@ -3,29 +3,37 @@ package com.example.khalinimaltaapp.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.khalinimaltaapp.data.Cliente
-import com.example.khalinimaltaapp.data.dao.ClienteDao
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.snapshots
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 
-class ListaClientesViewModel(private val clienteDao: ClienteDao) : ViewModel() {
+@OptIn(ExperimentalCoroutinesApi::class)
+// Removemos o 'clienteDao' do construtor
+class ListaClientesViewModel : ViewModel() {
 
-    // 1. Usamos StateFlow para a busca para que o 'combine' perceba a mudança
+    // Instância do Firebase Firestore
+    private val firestore = FirebaseFirestore.getInstance()
+
+    // 1. Guarda o termo digitado na barra de pesquisa
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
 
-    // 2. Fluxo original do banco
-    private val _clientesBase = clienteDao.getAllClientes()
+    // 2. O motor reativo: escuta a nuvem e reage à alteração da barra de pesquisa
+    val clientes: StateFlow<List<Cliente>> = _searchQuery
+        .flatMapLatest { query ->
+            val colecao = firestore.collection("clientes")
 
-    // 3. O combine agora observa o _searchQuery corretamente
-    val clientes: StateFlow<List<Cliente>> = _clientesBase
-        .combine(_searchQuery) { lista, query ->
-            if (query.isEmpty()) {
-                lista
+            val firestoreQuery = if (query.isBlank()) {
+                colecao // Se vazio, pega a lista completa
             } else {
-                lista.filter { cliente ->
-                    cliente.nome.contains(query, ignoreCase = true) ||
-                            cliente.sobrenome.contains(query, ignoreCase = true) ||
-                            cliente.cpf.contains(query)
-                }
+                // Filtra clientes cujo nome começa com o termo pesquisado
+                colecao.whereGreaterThanOrEqualTo("nome", query)
+                    .whereLessThanOrEqualTo("nome", query + "\uf8ff")
+            }
+
+            firestoreQuery.snapshots().map { querySnapshot ->
+                querySnapshot.toObjects(Cliente::class.java)
             }
         }
         .stateIn(
@@ -34,7 +42,7 @@ class ListaClientesViewModel(private val clienteDao: ClienteDao) : ViewModel() {
             initialValue = emptyList()
         )
 
-    // Função para atualizar a busca
+    // Função para atualizar o termo da busca
     fun onSearchQueryChange(newQuery: String) {
         _searchQuery.value = newQuery
     }

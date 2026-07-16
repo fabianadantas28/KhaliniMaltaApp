@@ -7,11 +7,16 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.khalinimaltaapp.data.Cliente
-import com.example.khalinimaltaapp.data.dao.ClienteDao
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
-class CadastroClienteViewModel(private val clienteDao: ClienteDao) : ViewModel() {
+// Removemos a necessidade de passar o ClienteDao no construtor
+class CadastroClienteViewModel : ViewModel() {
+
+    // Instância do Firebase Firestore
+    private val firestore = FirebaseFirestore.getInstance()
 
     // Variáveis estáveis usando o 'by' correto do Kotlin
     var nome by mutableStateOf("")
@@ -29,7 +34,7 @@ class CadastroClienteViewModel(private val clienteDao: ClienteDao) : ViewModel()
         if (senha == confirmarSenha && senha.isNotEmpty()) {
             viewModelScope.launch(Dispatchers.IO) {
                 try {
-                    // Mapeia os dados da tela para as colunas exatas da entidade Cliente
+                    // Mapeia os dados da tela para o objeto Cliente
                     val novoCliente = Cliente(
                         nome = nome,
                         sobrenome = sobrenome,
@@ -40,11 +45,17 @@ class CadastroClienteViewModel(private val clienteDao: ClienteDao) : ViewModel()
                         senha = senha
                     )
 
-                    clienteDao.inserir(novoCliente)
-                    Log.d("DB_SUCCESS", "Cliente ${novoCliente.nome} cadastrado com sucesso!")
+                    // Salva no Firestore dentro de uma coleção chamada "clientes"
+                    // O "document(novoCliente.cpf)" usa o CPF do cliente como o ID único do documento
+                    firestore.collection("clientes")
+                        .document(novoCliente.cpf)
+                        .set(novoCliente)
+                        .await() // Aguarda a tarefa do Firebase terminar de forma assíncrona
+
+                    Log.d("FIREBASE_SUCCESS", "Cliente ${novoCliente.nome} salvo na nuvem com sucesso!")
 
                 } catch (e: Exception) {
-                    Log.e("DB_ERROR", "Erro ao inserir no banco: ${e.message}")
+                    Log.e("FIREBASE_ERROR", "Erro ao salvar no Firestore: ${e.message}")
                 }
             }
         }

@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,13 +23,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.khalinimaltaapp.data.Produto
-import com.example.khalinimaltaapp.data.database.AppDatabase
-import coil.compose.AsyncImage // Importação da biblioteca Coil adicionada
+import coil.compose.AsyncImage
 
 // CORES DA KHALINI
 val KhaliniGold = Color(0xFFC39953)
@@ -40,16 +38,8 @@ val StatusRed = Color(0xFFD50000)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PaginaControleEstoque(navController: NavController) {
-    val context = LocalContext.current
-    val db = AppDatabase.getDatabase(context)
-
-    val viewModel: ControleEstoqueViewModel = viewModel(
-        factory = object : ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return ControleEstoqueViewModel(db.produtoDao()) as T
-            }
-        }
-    )
+    // CORRIGIDO: Instanciação limpa e direta do ViewModel sem passar o DAO local do Room
+    val viewModel: ControleEstoqueViewModel = viewModel()
 
     val produtos by viewModel.produtosFiltrados.collectAsState()
     val totalItens = produtos.sumOf { it.qtdeEstoque }
@@ -82,7 +72,8 @@ fun PaginaControleEstoque(navController: NavController) {
             ) {
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(
-                        imageVector = Icons.Default.ArrowBack,
+                        // CORRIGIDO: Modificado para a versão moderna AutoMirrored para remover o warning
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Voltar",
                         tint = KhaliniGold
                     )
@@ -159,7 +150,6 @@ fun CardProdutoEstoque(produto: Produto) {
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // --- NOVO: CONTAINER DA FOTO DO PRODUTO COM COIL ---
             Box(
                 modifier = Modifier
                     .size(70.dp)
@@ -188,7 +178,6 @@ fun CardProdutoEstoque(produto: Produto) {
 
             Spacer(modifier = Modifier.width(14.dp))
 
-            // --- CONTEÚDO DOS TEXTOS E PREÇOS ---
             Column(modifier = Modifier.weight(1f)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -210,7 +199,6 @@ fun CardProdutoEstoque(produto: Produto) {
                         )
                     }
 
-                    // Status da Tag
                     val (txtStatus, corStatus) = when {
                         produto.qtdeEstoque > 10 -> "Em Estoque" to StatusGreen
                         produto.qtdeEstoque > 0 -> "Baixo" to StatusOrange

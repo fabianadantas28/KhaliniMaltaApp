@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "27764642564",
+    "project_id": "khalini-malta-app",
+    "storage_bucket": "khalini-malta-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:27764642564:android:61d2a8e247950108933651",
+        "android_client_info": {
+          "package_name": "com.example.khalinimaltaapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_d-dnjU2qb-0Ju0PfTFhe0UzDECGg_DA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
